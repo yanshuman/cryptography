@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSA architecture diagram</title>
+<style>
+:root{--bg:#EEF2F7;--ink:#16203A;--muted:#56617C;--card:#fff;--line:#D3DAE7;--pub:#2747C9}
+@media (prefers-color-scheme: dark){:root{--bg:#0B1020;--ink:#E8ECF5;--muted:#9AA5BE;--card:#18203A;--line:#2B365A;--pub:#93AAFF}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 60px}
+h1{margin:0 0 6px;font-size:1.8rem} p.lead{margin:0 0 18px;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:focus-visible,.node:focus-visible{outline:3px solid var(--pub);outline-offset:2px}
+.diagram{overflow-x:auto} .diagram svg{min-width:820px;width:100%;height:auto;display:block}
+.node{cursor:pointer} .node.active rect{stroke-width:3.5}
+.info{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;min-height:70px}
+.info h2{margin:0 0 4px;font-size:1.1rem} .info code{color:var(--muted)} .info p{margin:6px 0 0}
+</style></head><body><div class="wrap">
+<h1>RSA architecture</h1>
+<p class="lead">Click any box to see what happens at that step. Blue is public, gold is private, purple is the open network, red is the attacker's path.</p>
+<div class="bar"><button id="theme">Switch theme</button><button id="svgdl">Download SVG</button><button id="pngdl">Download PNG</button></div>
+<div class="diagram" id="diagram"><svg class="rsa" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 930" role="img" aria-labelledby="rsatitle">
+<title id="rsatitle">RSA architecture: key generation, encryption, digital signatures, and the attacker's view</title>
+<style>
+.rsa{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.rsa .lt{font-size:15px;font-weight:700} .rsa .ls{font-size:12.5px} .rsa .leg{font-size:12px}
+.rsa .node rect{stroke-width:1.5} .rsa .card{stroke-width:1.2}
+.rsa .node .t{font-size:13.5px;font-weight:700;text-anchor:middle}
+.rsa .node .s{font-size:11.5px;text-anchor:middle;font-family:ui-monospace,Consolas,monospace}
+.rsa .math{font-size:14px;font-family:ui-monospace,Consolas,monospace}
+.rsa .av text{font-size:15px;font-weight:800;text-anchor:middle}
+.rsa .net rect{stroke-dasharray:5 4} .rsa .ico rect{fill:currentColor !important;stroke:none !important}
+.rsa .arrow{fill:none;stroke-width:1.8} .rsa .arrow.danger{stroke-dasharray:6 4}
+svg.rsa .bgr{fill:#F7F9FC}
+svg.rsa .lane{fill:#EBF0F7}
+svg.rsa .lt,svg.rsa .math{fill:#16203A}
+svg.rsa .ls,svg.rsa .leg{fill:#56617C}
+svg.rsa .node rect,svg.rsa .card{fill:#FFFFFF;stroke:#C9D2E3}
+svg.rsa .node .t{fill:#16203A}
+svg.rsa .node .s{fill:#56617C}
+svg.rsa .arrow{stroke:#56617C}
+svg.rsa .ahf{fill:#56617C}
+svg.rsa .arrow.danger{stroke:#B23A26}
+svg.rsa .ahbf{fill:#B23A26}
+svg.rsa .av text{fill:#FFFFFF}
+svg.rsa .pub rect,svg.rsa rect.pub{fill:#E3E9FB;stroke:#2747C9}
+svg.rsa .node.pub .t,svg.rsa .node.pub .s,svg.rsa .ico.pub{fill:#2747C9}
+svg.rsa .av.pub circle{fill:#2747C9}
+svg.rsa .arrow.pub{stroke:#2747C9}
+svg.rsa .priv rect,svg.rsa rect.priv{fill:#FBEFD6;stroke:#9A6200}
+svg.rsa .node.priv .t,svg.rsa .node.priv .s,svg.rsa .ico.priv{fill:#9A6200}
+svg.rsa .av.priv circle{fill:#9A6200}
+svg.rsa .arrow.priv{stroke:#9A6200}
+svg.rsa .bad rect,svg.rsa rect.bad{fill:#F9E1DC;stroke:#B23A26}
+svg.rsa .node.bad .t,svg.rsa .node.bad .s,svg.rsa .ico.bad{fill:#B23A26}
+svg.rsa .av.bad circle{fill:#B23A26}
+svg.rsa .arrow.bad{stroke:#B23A26}
+svg.rsa .ok rect,svg.rsa rect.ok{fill:#DCF2E6;stroke:#1C7A50}
+svg.rsa .node.ok .t,svg.rsa .node.ok .s,svg.rsa .ico.ok{fill:#1C7A50}
+svg.rsa .av.ok circle{fill:#1C7A50}
+svg.rsa .arrow.ok{stroke:#1C7A50}
+svg.rsa .net rect,svg.rsa rect.net{fill:#EEE8FB;stroke:#6A3FC9}
+svg.rsa .node.net .t,svg.rsa .node.net .s,svg.rsa .ico.net{fill:#6A3FC9}
+svg.rsa .av.net circle{fill:#6A3FC9}
+svg.rsa .arrow.net{stroke:#6A3FC9}
+@media (prefers-color-scheme: dark){svg.rsa .bgr{fill:#0F1524}
+svg.rsa .lane{fill:#151D33}
+svg.rsa .lt,svg.rsa .math{fill:#E8ECF5}
+svg.rsa .ls,svg.rsa .leg{fill:#9AA5BE}
+svg.rsa .node rect,svg.rsa .card{fill:#1B2440;stroke:#2E3A5E}
+svg.rsa .node .t{fill:#E8ECF5}
+svg.rsa .node .s{fill:#9AA5BE}
+svg.rsa .arrow{stroke:#9AA5BE}
+svg.rsa .ahf{fill:#9AA5BE}
+svg.rsa .arrow.danger{stroke:#FF8F7A}
+svg.rsa .ahbf{fill:#FF8F7A}
+svg.rsa .av text{fill:#1B2440}
+svg.rsa .pub rect,svg.rsa rect.pub{fill:#22305E;stroke:#93AAFF}
+svg.rsa .node.pub .t,svg.rsa .node.pub .s,svg.rsa .ico.pub{fill:#93AAFF}
+svg.rsa .av.pub circle{fill:#93AAFF}
+svg.rsa .arrow.pub{stroke:#93AAFF}
+svg.rsa .priv rect,svg.rsa rect.priv{fill:#3A2F17;stroke:#F2C062}
+svg.rsa .node.priv .t,svg.rsa .node.priv .s,svg.rsa .ico.priv{fill:#F2C062}
+svg.rsa .av.priv circle{fill:#F2C062}
+svg.rsa .arrow.priv{stroke:#F2C062}
+svg.rsa .bad rect,svg.rsa rect.bad{fill:#3E1F1A;stroke:#FF8F7A}
+svg.rsa .node.bad .t,svg.rsa .node.bad .s,svg.rsa .ico.bad{fill:#FF8F7A}
+svg.rsa .av.bad circle{fill:#FF8F7A}
+svg.rsa .arrow.bad{stroke:#FF8F7A}
+svg.rsa .ok rect,svg.rsa rect.ok{fill:#173A2B;stroke:#6FD3A3}
+svg.rsa .node.ok .t,svg.rsa .node.ok .s,svg.rsa .ico.ok{fill:#6FD3A3}
+svg.rsa .av.ok circle{fill:#6FD3A3}
+svg.rsa .arrow.ok{stroke:#6FD3A3}
+svg.rsa .net rect,svg.rsa rect.net{fill:#2A2148;stroke:#C3A6FF}
+svg.rsa .node.net .t,svg.rsa .node.net .s,svg.rsa .ico.net{fill:#C3A6FF}
+svg.rsa .av.net circle{fill:#C3A6FF}
+svg.rsa .arrow.net{stroke:#C3A6FF}}
+svg.rsa.light .bgr{fill:#F7F9FC}
+svg.rsa.light .lane{fill:#EBF0F7}
+svg.rsa.light .lt,svg.rsa.light .math{fill:#16203A}
+svg.rsa.light .ls,svg.rsa.light .leg{fill:#56617C}
+svg.rsa.light .node rect,svg.rsa.light .card{fill:#FFFFFF;stroke:#C9D2E3}
+svg.rsa.light .node .t{fill:#16203A}
+svg.rsa.light .node .s{fill:#56617C}
+svg.rsa.light .arrow{stroke:#56617C}
+svg.rsa.light .ahf{fill:#56617C}
+svg.rsa.light .arrow.danger{stroke:#B23A26}
+svg.rsa.light .ahbf{fill:#B23A26}
+svg.rsa.light .av text{fill:#FFFFFF}
+svg.rsa.light .pub rect,svg.rsa.light rect.pub{fill:#E3E9FB;stroke:#2747C9}
+svg.rsa.light .node.pub .t,svg.rsa.light .node.pub .s,svg.rsa.light .ico.pub{fill:#2747C9}
+svg.rsa.light .av.pub circle{fill:#2747C9}
+svg.rsa.light .arrow.pub{stroke:#2747C9}
+svg.rsa.light .priv rect,svg.rsa.light rect.priv{fill:#FBEFD6;stroke:#9A6200}
+svg.rsa.light .node.priv .t,svg.rsa.light .node.priv .s,svg.rsa.light .ico.priv{fill:#9A6200}
+svg.rsa.light .av.priv circle{fill:#9A6200}
+svg.rsa.light .arrow.priv{stroke:#9A6200}
+svg.rsa.light .bad rect,svg.rsa.light rect.bad{fill:#F9E1DC;stroke:#B23A26}
+svg.rsa.light .node.bad .t,svg.rsa.light .node.bad .s,svg.rsa.light .ico.bad{fill:#B23A26}
+svg.rsa.light .av.bad circle{fill:#B23A26}
+svg.rsa.light .arrow.bad{stroke:#B23A26}
+svg.rsa.light .ok rect,svg.rsa.light rect.ok{fill:#DCF2E6;stroke:#1C7A50}
+svg.rsa.light .node.ok .t,svg.rsa.light .node.ok .s,svg.rsa.light .ico.ok{fill:#1C7A50}
+svg.rsa.light .av.ok circle{fill:#1C7A50}
+svg.rsa.light .arrow.ok{stroke:#1C7A50}
+svg.rsa.light .net rect,svg.rsa.light rect.net{fill:#EEE8FB;stroke:#6A3FC9}
+svg.rsa.light .node.net .t,svg.rsa.light .node.net .s,svg.rsa.light .ico.net{fill:#6A3FC9}
+svg.rsa.light .av.net circle{fill:#6A3FC9}
+svg.rsa.light .arrow.net{stroke:#6A3FC9}
+svg.rsa.dark .bgr{fill:#0F1524}
+svg.rsa.dark .lane{fill:#151D33}
+svg.rsa.dark .lt,svg.rsa.dark .math{fill:#E8ECF5}
+svg.rsa.dark .ls,svg.rsa.dark .leg{fill:#9AA5BE}
+svg.rsa.dark .node rect,svg.rsa.dark .card{fill:#1B2440;stroke:#2E3A5E}
+svg.rsa.dark .node .t{fill:#E8ECF5}
+svg.rsa.dark .node .s{fill:#9AA5BE}
+svg.rsa.dark .arrow{stroke:#9AA5BE}
+svg.rsa.dark .ahf{fill:#9AA5BE}
+svg.rsa.dark .arrow.danger{stroke:#FF8F7A}
+svg.rsa.dark .ahbf{fill:#FF8F7A}
+svg.rsa.dark .av text{fill:#1B2440}
+svg.rsa.dark .pub rect,svg.rsa.dark rect.pub{fill:#22305E;stroke:#93AAFF}
+svg.rsa.dark .node.pub .t,svg.rsa.dark .node.pub .s,svg.rsa.dark .ico.pub{fill:#93AAFF}
+svg.rsa.dark .av.pub circle{fill:#93AAFF}
+svg.rsa.dark .arrow.pub{stroke:#93AAFF}
+svg.rsa.dark .priv rect,svg.rsa.dark rect.priv{fill:#3A2F17;stroke:#F2C062}
+svg.rsa.dark .node.priv .t,svg.rsa.dark .node.priv .s,svg.rsa.dark .ico.priv{fill:#F2C062}
+svg.rsa.dark .av.priv circle{fill:#F2C062}
+svg.rsa.dark .arrow.priv{stroke:#F2C062}
+svg.rsa.dark .bad rect,svg.rsa.dark rect.bad{fill:#3E1F1A;stroke:#FF8F7A}
+svg.rsa.dark .node.bad .t,svg.rsa.dark .node.bad .s,svg.rsa.dark .ico.bad{fill:#FF8F7A}
+svg.rsa.dark .av.bad circle{fill:#FF8F7A}
+svg.rsa.dark .arrow.bad{stroke:#FF8F7A}
+svg.rsa.dark .ok rect,svg.rsa.dark rect.ok{fill:#173A2B;stroke:#6FD3A3}
+svg.rsa.dark .node.ok .t,svg.rsa.dark .node.ok .s,svg.rsa.dark .ico.ok{fill:#6FD3A3}
+svg.rsa.dark .av.ok circle{fill:#6FD3A3}
+svg.rsa.dark .arrow.ok{stroke:#6FD3A3}
+svg.rsa.dark .net rect,svg.rsa.dark rect.net{fill:#2A2148;stroke:#C3A6FF}
+svg.rsa.dark .node.net .t,svg.rsa.dark .node.net .s,svg.rsa.dark .ico.net{fill:#C3A6FF}
+svg.rsa.dark .av.net circle{fill:#C3A6FF}
+svg.rsa.dark .arrow.net{stroke:#C3A6FF}
+svg.rsa .ico.net{color:#6A3FC9}
+@media (prefers-color-scheme: dark){svg.rsa .ico.net{color:#C3A6FF}}
+svg.rsa.light .ico.net{color:#6A3FC9}
+svg.rsa.dark .ico.net{color:#C3A6FF}</style>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahf" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahbf" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="bgr" width="1100" height="930" rx="16"/>
+<text class="lt" x="30" y="36" style="font-size:20px">RSA public-key cryptosystem</text>
+<text class="ls" x="30" y="56">Lock with the public key, unlock with the private key. Sign with the private key, verify with the public key.</text>
+<rect class="lane" x="14" y="72" width="1072" height="230" rx="14"/><text class="lt" x="30" y="98">1 · Key generation</text><text class="ls" x="1070" y="98" text-anchor="end">Alice does this once</text><rect class="lane" x="14" y="322" width="1072" height="132" rx="14"/><text class="lt" x="30" y="348">2 · Encryption</text><text class="ls" x="1070" y="348" text-anchor="end">Bob → Alice: keeps it secret</text><rect class="lane" x="14" y="472" width="1072" height="132" rx="14"/><text class="lt" x="30" y="498">3 · Digital signature</text><text class="ls" x="1070" y="498" text-anchor="end">Alice → Bob: proves who sent it</text><rect class="lane" x="14" y="624" width="1072" height="176" rx="14"/><text class="lt" x="30" y="650">4 · The attacker</text><text class="ls" x="1070" y="650" text-anchor="end">Eve sees only public values</text>
+<path class="arrow " d="M335,144.0 L353,144.0" marker-end="url(#ah)"/><path class="arrow " d="M520,144.0 L538,144.0" marker-end="url(#ah)"/><path class="arrow " d="M705,144.0 L723,144.0" marker-end="url(#ah)"/><path class="arrow " d="M890,144.0 L908,144.0" marker-end="url(#ah)"/><path class="arrow " d="M992.5,176 L992.5,196 L437.5,196"/><path class="arrow " d="M437.5,196 L437.5,210" marker-end="url(#ah)"/><path class="arrow " d="M807.5,196 L807.5,210" marker-end="url(#ah)"/><path class="arrow " d="M335,398 L353,398" marker-end="url(#ah)"/><path class="arrow " d="M520,398 L538,398" marker-end="url(#ah)"/><path class="arrow " d="M705,398 L723,398" marker-end="url(#ah)"/><path class="arrow " d="M890,398 L908,398" marker-end="url(#ah)"/><path class="arrow " d="M910,548 L892,548" marker-end="url(#ah)"/><path class="arrow " d="M725,548 L707,548" marker-end="url(#ah)"/><path class="arrow " d="M540,548 L522,548" marker-end="url(#ah)"/><path class="arrow " d="M355,548 L337,548" marker-end="url(#ah)"/><path class="arrow pub" d="M437.5,268 L437.5,364" marker-end="url(#ah)"/><path class="arrow priv" d="M807.5,268 L807.5,364" marker-end="url(#ah)"/><path class="arrow danger" d="M622.5,580 L622.5,674" marker-end="url(#ahb)"/><path class="arrow danger" d="M705,708 L723,708" marker-end="url(#ahb)"/><path class="arrow danger" d="M890,708 L900,708 L900,687 L908,687" marker-end="url(#ahb)"/><path class="arrow danger" d="M900,708 L900,753 L908,753" marker-end="url(#ahb)"/>
+<g class="node n" data-id="k1" tabindex="0" role="button" aria-label="Pick two primes: p = 61, q = 53"><rect x="170" y="112" width="165" height="64" rx="10"/><text class="t" x="252.5" y="138.0">Pick two primes</text><text class="s" x="252.5" y="159.0">p = 61, q = 53</text></g><g class="node pub" data-id="k2" tabindex="0" role="button" aria-label="Compute n: n = p × q = 3233"><rect x="355" y="112" width="165" height="64" rx="10"/><text class="t" x="437.5" y="138.0">Compute n</text><text class="s" x="437.5" y="159.0">n = p × q = 3233</text></g><g class="node priv" data-id="k3" tabindex="0" role="button" aria-label="Compute φ(n): (p−1)(q−1) = 3120"><rect x="540" y="112" width="165" height="64" rx="10"/><text class="t" x="622.5" y="138.0">Compute φ(n)</text><text class="s" x="622.5" y="159.0">(p−1)(q−1) = 3120</text></g><g class="node pub" data-id="k4" tabindex="0" role="button" aria-label="Choose e: gcd(e, φ) = 1 → 17"><rect x="725" y="112" width="165" height="64" rx="10"/><text class="t" x="807.5" y="138.0">Choose e</text><text class="s" x="807.5" y="159.0">gcd(e, φ) = 1 → 17</text></g><g class="node priv" data-id="k5" tabindex="0" role="button" aria-label="Find d: e·d ≡ 1 (mod φ) → 2753"><rect x="910" y="112" width="165" height="64" rx="10"/><text class="t" x="992.5" y="138.0">Find d</text><text class="s" x="992.5" y="159.0">e·d ≡ 1 (mod φ) → 2753</text></g><g class="node pub" data-id="pk" tabindex="0" role="button" aria-label="Public key (e, n): (17, 3233)"><rect x="355" y="212" width="165" height="56" rx="10"/><text class="t" x="437.5" y="234.0">Public key (e, n)</text><text class="s" x="437.5" y="255.0">(17, 3233)</text></g><g class="node priv" data-id="sk" tabindex="0" role="button" aria-label="Private key (d, n): (2753, 3233)"><rect x="725" y="212" width="165" height="56" rx="10"/><text class="t" x="807.5" y="234.0">Private key (d, n)</text><text class="s" x="807.5" y="255.0">(2753, 3233)</text></g><g class="node n" data-id="e1" tabindex="0" role="button" aria-label="Bob&#x27;s message m: m = 65  (&quot;A&quot;)"><rect x="170" y="366" width="165" height="64" rx="10"/><text class="t" x="252.5" y="392.0">Bob's message m</text><text class="s" x="252.5" y="413.0">m = 65  ("A")</text></g><g class="node pub" data-id="e2" tabindex="0" role="button" aria-label="Encrypt with e: c = mᵉ mod n = 2790"><rect x="355" y="366" width="165" height="64" rx="10"/><text class="t" x="437.5" y="392.0">Encrypt with e</text><text class="s" x="437.5" y="413.0">c = mᵉ mod n = 2790</text></g><g class="node priv" data-id="e4" tabindex="0" role="button" aria-label="Decrypt with d: m = cᵈ mod n = 65"><rect x="725" y="366" width="165" height="64" rx="10"/><text class="t" x="807.5" y="392.0">Decrypt with d</text><text class="s" x="807.5" y="413.0">m = cᵈ mod n = 65</text></g><g class="node ok" data-id="e5" tabindex="0" role="button" aria-label="Alice reads it: 65 → &quot;A&quot; ✓"><rect x="910" y="366" width="165" height="64" rx="10"/><text class="t" x="992.5" y="392.0">Alice reads it</text><text class="s" x="992.5" y="413.0">65 → "A" ✓</text></g><g class="node n" data-id="g1" tabindex="0" role="button" aria-label="Hash the message: h = H(m) = 123"><rect x="910" y="516" width="165" height="64" rx="10"/><text class="t" x="992.5" y="542.0">Hash the message</text><text class="s" x="992.5" y="563.0">h = H(m) = 123</text></g><g class="node priv" data-id="g2" tabindex="0" role="button" aria-label="Sign with d: s = hᵈ mod n = 2746"><rect x="725" y="516" width="165" height="64" rx="10"/><text class="t" x="807.5" y="542.0">Sign with d</text><text class="s" x="807.5" y="563.0">s = hᵈ mod n = 2746</text></g><g class="node pub" data-id="g4" tabindex="0" role="button" aria-label="Verify with e: sᵉ mod n = 123"><rect x="355" y="516" width="165" height="64" rx="10"/><text class="t" x="437.5" y="542.0">Verify with e</text><text class="s" x="437.5" y="563.0">sᵉ mod n = 123</text></g><g class="node ok" data-id="g5" tabindex="0" role="button" aria-label="Signature valid: 123 = H(m) ✓"><rect x="170" y="516" width="165" height="64" rx="10"/><text class="t" x="252.5" y="542.0">Signature valid</text><text class="s" x="252.5" y="563.0">123 = H(m) ✓</text></g><g class="node net" data-id="ch" tabindex="0" role="button" aria-label="Public network: anyone can listen"><rect x="540" y="366" width="165" height="214" rx="12"/><text class="t" x="622.5" y="390">Public network</text><text class="s" x="622.5" y="410">c = 2790</text><g class="ico net" transform="translate(611.5,451.0)"><path d="M5,12 V8 a6,6 0 0 1 12,0 V12" fill="none" stroke="currentColor" stroke-width="2.4" class="lockarc"/><rect x="1" y="12" width="20" height="16" rx="3"/></g><text class="s" x="622.5" y="495.0">anyone can listen</text><text class="s" x="622.5" y="544">(m, s = 2746)</text><text class="t" x="622.5" y="566" style="font-size:12px">internet · Wi-Fi · email</text></g><g class="node bad" data-id="a1" tabindex="0" role="button" aria-label="Eve intercepts: e, n, c, s"><rect x="540" y="676" width="165" height="64" rx="10"/><text class="t" x="622.5" y="702.0">Eve intercepts</text><text class="s" x="622.5" y="723.0">e, n, c, s</text></g><g class="node bad" data-id="a2" tabindex="0" role="button" aria-label="Must factor n: n = p × q → φ → d"><rect x="725" y="676" width="165" height="64" rx="10"/><text class="t" x="807.5" y="702.0">Must factor n</text><text class="s" x="807.5" y="723.0">n = p × q → φ → d</text></g><g class="node bad" data-id="a3" tabindex="0" role="button" aria-label="Toy key: broken: 3233 = 61 × 53"><rect x="910" y="660" width="165" height="54" rx="10"/><text class="t" x="992.5" y="681.0">Toy key: broken</text><text class="s" x="992.5" y="702.0">3233 = 61 × 53</text></g><g class="node ok" data-id="a4" tabindex="0" role="button" aria-label="2048-bit key: safe: ~617 digits, infeasible"><rect x="910" y="726" width="165" height="54" rx="10"/><text class="t" x="992.5" y="747.0">2048-bit key: safe</text><text class="s" x="992.5" y="768.0">~617 digits, infeasible</text></g>
+<g class="av ok"><circle cx="46" cy="154" r="17"/><text x="46" y="159">A</text></g><text class="lt" x="72" y="153" style="font-size:13.5px">Alice</text><text class="ls" x="72" y="169">receiver</text><g class="av pub"><circle cx="46" cy="398" r="17"/><text x="46" y="403">B</text></g><text class="lt" x="72" y="397" style="font-size:13.5px">Bob</text><text class="ls" x="72" y="413">sender</text><g class="av ok"><circle cx="46" cy="548" r="17"/><text x="46" y="553">A</text></g><text class="lt" x="72" y="547" style="font-size:13.5px">Alice</text><text class="ls" x="72" y="563">signer</text><g class="av bad"><circle cx="46" cy="708" r="17"/><text x="46" y="713">E</text></g><text class="lt" x="72" y="707" style="font-size:13.5px">Eve</text><text class="ls" x="72" y="723">attacker</text><text class="ls" x="170" y="696">Everything Eve can see is in the</text><text class="ls" x="170" y="713">dashed purple box. Without d she</text><text class="ls" x="170" y="730">cannot decrypt c or forge s.</text>
+<rect class="card" x="14" y="818" width="1072" height="66" rx="14"/><text class="lt" x="30" y="842">Why decryption works</text><text class="math" x="30" y="868">e·d = 1 + k·φ(n)  ⇒  (mᵉ)ᵈ = m · (m^φ(n))ᵏ ≡ m · 1ᵏ = m  (mod n)</text><text class="ls" x="1070" y="868" text-anchor="end">Euler's theorem · here 17 × 2753 = 1 + 15 × 3120</text>
+<g><rect x="30" y="900" width="12" height="12" rx="3" class="pub"/><text class="leg" x="48" y="910">public</text><rect x="108" y="900" width="12" height="12" rx="3" class="priv"/><text class="leg" x="126" y="910">private</text><rect x="192" y="900" width="12" height="12" rx="3" class="net"/><text class="leg" x="210" y="910">public channel</text><rect x="312" y="900" width="12" height="12" rx="3" class="bad"/><text class="leg" x="330" y="910">attack path</text><rect x="420" y="900" width="12" height="12" rx="3" class="ok"/><text class="leg" x="438" y="910">success</text><text class="leg" x="1070" y="910" text-anchor="end">Example values: p = 61, q = 53, e = 17, d = 2753</text></g>
+</svg></div>
+<div class="info" id="info" aria-live="polite"><h2>Pick a step</h2><p>Select any box in the diagram to read about it.</p></div>
+</div>
+<script>
+const INFO={"k1": {"title": "Pick two primes", "sub": "p = 61, q = 53", "info": "Choose two different, random primes. Real RSA uses primes around 1024 bits (about 309 digits) each; we use tiny ones so the math is visible."}, "k2": {"title": "Compute n", "sub": "n = p × q = 3233", "info": "n is the public modulus. Multiplying is instant; splitting n back into p and q is the hard problem RSA's security rests on."}, "k3": {"title": "Compute φ(n)", "sub": "(p−1)(q−1) = 3120", "info": "φ(n) counts the numbers below n that share no factor with it. It is easy only if you know p and q, so it must stay secret."}, "k4": {"title": "Choose e", "sub": "gcd(e, φ) = 1 → 17", "info": "e must share no common factor with φ(n), otherwise no private exponent exists. Real systems almost always use e = 65537."}, "k5": {"title": "Find d", "sub": "e·d ≡ 1 (mod φ) → 2753", "info": "d is the modular inverse of e, found with the Extended Euclidean Algorithm. Check: 17 × 2753 = 46801 = 15 × 3120 + 1."}, "pk": {"title": "Public key (e, n)", "sub": "(17, 3233)", "info": "Published for everyone, Eve included. It can lock (encrypt) messages to Alice and verify Alice's signatures, but it cannot unlock anything."}, "sk": {"title": "Private key (d, n)", "sub": "(2753, 3233)", "info": "Never leaves Alice. It is the only key that can decrypt messages sent to her or produce her signature. p, q and φ(n) are discarded or kept equally secret."}, "e1": {"title": "Bob's message m", "sub": "m = 65  (\"A\")", "info": "The message is turned into a number smaller than n. Here the letter A has character code 65. Real systems pad it first with OAEP."}, "e2": {"title": "Encrypt with e", "sub": "c = mᵉ mod n = 2790", "info": "Bob uses Alice's public key: 65¹⁷ mod 3233 = 2790. Anyone can do this, which is exactly the point."}, "e4": {"title": "Decrypt with d", "sub": "m = cᵈ mod n = 65", "info": "Alice uses her private key: 2790²⁷⁵³ mod 3233 = 65. Only the holder of d can undo the encryption."}, "e5": {"title": "Alice reads it", "sub": "65 → \"A\" ✓", "info": "The original message is back. Raising to e and then to d always cancel out modulo n (see the proof strip at the bottom)."}, "g1": {"title": "Hash the message", "sub": "h = H(m) = 123", "info": "Alice hashes her message to a short fixed-size number. Signing the hash instead of the whole message keeps it fast and safe."}, "g2": {"title": "Sign with d", "sub": "s = hᵈ mod n = 2746", "info": "Alice raises the hash to her private exponent: 123²⁷⁵³ mod 3233 = 2746. Only she can produce this value."}, "g4": {"title": "Verify with e", "sub": "sᵉ mod n = 123", "info": "Bob uses Alice's public key: 2746¹⁷ mod 3233 = 123, and hashes the message himself to compare."}, "g5": {"title": "Signature valid", "sub": "123 = H(m) ✓", "info": "The two hashes match, so the message really came from Alice and was not changed on the way. A forger would need d."}, "ch": {"title": "Public network", "sub": "c = 2790 · (m, s = 2746)", "info": "Everything here is visible to anyone: the ciphertext, the signed message and the public key. RSA is designed so that seeing all of it still does not reveal m or d."}, "a1": {"title": "Eve intercepts", "sub": "e, n, c, s", "info": "Eve records everything on the network: e = 17, n = 3233, c = 2790 and the signature. To read or forge anything she still needs d."}, "a2": {"title": "Must factor n", "sub": "n = p × q → φ → d", "info": "The only known route to d is to factor n into p and q, then rebuild φ(n) and d exactly like Alice did."}, "a3": {"title": "Toy key: broken", "sub": "3233 = 61 × 53", "info": "With a 4-digit n, trial division finds the factors instantly and Eve recovers d = 2753. This is why toy keys are only for learning."}, "a4": {"title": "2048-bit key: safe", "sub": "~617 digits, infeasible", "info": "A real n has about 617 digits. The best known classical algorithm (the number field sieve) would need far longer than the age of the universe."}};
+const svg=document.querySelector('#diagram svg');
+function show(g){document.querySelectorAll('.node.active').forEach(n=>n.classList.remove('active'));g.classList.add('active');const d=INFO[g.dataset.id];
+document.getElementById('info').innerHTML=`<h2>${d.title}</h2><code>${d.sub}</code><p>${d.info}</p>`;}
+document.querySelectorAll('.node').forEach(g=>{g.addEventListener('click',()=>show(g));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(g);}});});
+document.getElementById('theme').onclick=()=>{const dark=svg.classList.contains('dark')||(!svg.classList.contains('light')&&matchMedia('(prefers-color-scheme: dark)').matches);svg.classList.remove('dark','light');svg.classList.add(dark?'light':'dark');};
+function save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function svgText(){const c=svg.cloneNode(true);c.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));return new XMLSerializer().serializeToString(c);}
+document.getElementById('svgdl').onclick=()=>save(new Blob([svgText()],{type:'image/svg+xml'}),'rsa-flow.svg');
+document.getElementById('pngdl').onclick=()=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=2200;c.height=1860;c.getContext('2d').drawImage(img,0,0,2200,1860);c.toBlob(b=>save(b,'rsa-flow.png'));};img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText());};
+</script></body></html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RSA Lab: see every step</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --ink:#16203A; --muted:#56617C; --line:#D3DAE7;
+  --pub:#2747C9; --pub-soft:#E3E9FB; --priv:#9A6200; --priv-soft:#FBEFD6;
+  --ok:#1C7A50; --ok-soft:#DCF2E6; --bad:#B23A26; --bad-soft:#F9E1DC;
+  --sans:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A;
+    --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+    --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A;
+  --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+  --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+.wrap{max-width:820px;margin:0 auto;padding:40px 20px 80px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-0.02em}
+header p{margin:0;color:var(--muted);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:.88rem;font-weight:600}
+.chip.pub{background:var(--pub-soft);color:var(--pub)}
+.chip.priv{background:var(--priv-soft);color:var(--priv)}
+.phase{font-size:1.35rem;font-weight:800;margin:56px 0 8px}
+.phase-note{color:var(--muted);margin:0 0 20px}
+.steps{position:relative;padding-left:52px}
+.steps::before{content:"";position:absolute;left:17px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.step{position:relative;margin-bottom:28px}
+.step .dot{position:absolute;left:-52px;top:0;width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:.95rem}
+.step.done .dot{border-color:var(--ok);color:var(--ok)}
+.step.locked{opacity:.45}
+.step h3{margin:4px 0 6px;font-size:1.12rem}
+.why{color:var(--muted);margin:0 0 12px;max-width:62ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+label{display:block;font-size:.9rem;font-weight:600;margin-bottom:4px}
+input[type=text],input[type=number]{font-family:var(--mono);font-size:1.05rem;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:150px}
+input.wide{width:100%;max-width:340px}
+input:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--pub);outline-offset:2px}
+button{font-family:var(--sans);font-size:.92rem;font-weight:700;padding:9px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.formula{font-family:var(--mono);font-size:1.02rem;margin:4px 0;overflow-x:auto;white-space:nowrap}
+.big{font-size:1.25rem;font-weight:600}
+.v{padding:1px 7px;border-radius:6px;font-weight:600}
+.v.pub{background:var(--pub-soft);color:var(--pub)}
+.v.priv{background:var(--priv-soft);color:var(--priv)}
+.msg{margin-top:10px;padding:8px 12px;border-radius:10px;font-size:.93rem}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg:empty{display:none}
+.echips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.echips button{font-family:var(--mono);padding:5px 11px;font-weight:600}
+.echips button[aria-pressed="true"]{background:var(--pub);color:var(--surface);border-color:var(--pub)}
+.tablewrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.9rem;min-width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--sans);font-weight:700;color:var(--muted);font-size:.82rem;text-align:right}
+th:first-child,td:first-child{text-align:left}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:700;font-size:.93rem;color:var(--pub)}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0 0}
+.key{border-radius:14px;padding:16px 18px;border:2px solid}
+.key.pub{border-color:var(--pub);background:var(--pub-soft)}
+.key.priv{border-color:var(--priv);background:var(--priv-soft)}
+.key .t{font-weight:800;font-size:1rem}
+.key .k{font-family:var(--mono);font-size:1.3rem;font-weight:600;margin:6px 0 2px}
+.key.pub .k{color:var(--pub)} .key.priv .k{color:var(--priv)}
+.key .s{font-size:.9rem;color:var(--muted)}
+.attack-log{font-family:var(--mono);font-size:.95rem;margin-top:12px;min-height:1.6em}
+.match{font-weight:800}
+.msg .sugg{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;color:var(--ink)}
+.msg .sugg button{font-family:var(--mono);padding:4px 11px;border-color:var(--ok);color:var(--ok);background:var(--surface)}
+.msg .sugg button:hover{background:var(--ok-soft)}
+.arch{overflow-x:auto;margin-top:4px}
+.arch svg{width:100%;min-width:660px;height:auto;display:block}
+.arch .lane{fill:var(--bg)}
+.arch .lt{font:800 13px var(--sans);fill:var(--ink)}
+.arch .note{font:500 12px var(--sans);fill:var(--muted)}
+.arch .nd{cursor:pointer}
+.arch .nd rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:stroke-width .2s}
+.arch .nd .t{font:700 12.5px var(--sans);fill:var(--ink);text-anchor:middle}
+.arch .nd .v{font:600 13px var(--mono);fill:var(--ink);text-anchor:middle}
+.arch .nd .h{font:400 10.5px var(--mono);fill:var(--muted);text-anchor:middle}
+.arch .nd.pub rect{fill:var(--pub-soft);stroke:var(--pub)} .arch .nd.pub text{fill:var(--pub)}
+.arch .nd.priv rect{fill:var(--priv-soft);stroke:var(--priv)} .arch .nd.priv text{fill:var(--priv)}
+.arch .nd.ok rect{fill:var(--ok-soft);stroke:var(--ok)} .arch .nd.ok text{fill:var(--ok)}
+.arch .nd.bad rect{fill:var(--bad-soft);stroke:var(--bad)} .arch .nd.bad text{fill:var(--bad)}
+.arch .nd.net rect{stroke-dasharray:5 4;stroke:var(--muted)}
+.arch .nd.off{opacity:.35}
+.arch .nd.on rect{stroke-width:4}
+.arch .nd:focus-visible{outline:none} .arch .nd:focus-visible rect{stroke-width:4}
+.arch .ar{fill:none;stroke:var(--muted);stroke-width:1.6}
+.arch .ar.pub{stroke:var(--pub)} .arch .ar.priv{stroke:var(--priv)} .arch .ar.bad{stroke:var(--bad);stroke-dasharray:6 4}
+.arch .ah{fill:var(--muted)} .arch .ahp{fill:var(--pub)} .arch .ahv{fill:var(--priv)} .arch .ahb{fill:var(--bad)}
+.arch .pkt{transition:transform .55s ease, opacity .3s}
+.arch .pkt rect{fill:var(--ink)} .arch .pkt text{font:700 11px var(--mono);fill:var(--bg);text-anchor:middle}
+@media (prefers-reduced-motion: reduce){.arch .pkt,.arch .nd rect{transition:none}}
+.cap{margin-top:12px;min-height:3.2em}
+.cap strong{display:block}
+@media (max-width:560px){
+  .keys{grid-template-columns:1fr}
+  .steps{padding-left:44px}
+  .steps::before{left:13px}
+  .step .dot{left:-44px;width:28px;height:28px;font-size:.8rem}
+  input[type=number]{width:120px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>RSA, one step at a time</h1>
+    <p>Pick two prime numbers and watch every value in RSA get made. Change any number and the whole page recalculates, so you can see what each step depends on.</p>
+    <div class="legend">
+      <span class="chip pub">Blue = public, anyone can see it</span>
+      <span class="chip priv">Gold = private, only the owner knows it</span>
+    </div>
+  </header>
+
+  <h2 class="phase">Part A: Make the keys</h2>
+  <p class="phase-note">This is done once, by the person who wants to receive secret messages.</p>
+
+  <div class="steps">
+    <section class="step" id="s1">
+      <div class="dot">1</div>
+      <h3>Choose two prime numbers, p and q</h3>
+      <p class="why">Primes are used because they let the owner calculate φ(n) instantly in step 3. Real RSA uses primes about 300 digits long. Here we keep them small so you can follow the math. Type any number: if it is not prime, you'll get the nearest primes to pick from.</p>
+      <div class="panel">
+        <div class="row">
+          <div><label for="p">p (prime)</label><input type="number" id="p" value="61" min="3" max="99999"></div>
+          <div><label for="q">q (prime)</label><input type="number" id="q" value="53" min="3" max="99999"></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button data-p="3" data-q="11">Tiny example (3, 11)</button>
+          <button data-p="61" data-q="53">Textbook example (61, 53)</button>
+          <button id="rand">Random primes</button>
+        </div>
+        <div class="msg" id="pqmsg"></div>
+      </div>
+    </section>
+
+    <section class="step" id="s2">
+      <div class="dot">2</div>
+      <h3>Multiply them: n = p × q</h3>
+      <p class="why">n is public. Everyone can see it, but nobody can easily split it back into p and q when the primes are large. That is the whole secret of RSA.</p>
+      <div class="panel"><div class="formula big" id="nf"></div></div>
+    </section>
+
+    <section class="step" id="s3">
+      <div class="dot">3</div>
+      <h3>Calculate φ(n) = (p − 1) × (q − 1)</h3>
+      <p class="why">φ(n) is private. The owner can calculate it because they know p and q. An attacker only sees n, so they can't.</p>
+      <div class="panel"><div class="formula big" id="phif"></div></div>
+    </section>
+
+    <section class="step" id="s4">
+      <div class="dot">4</div>
+      <h3>Choose the public exponent e</h3>
+      <p class="why">Rule: e must be between 1 and φ(n), and share no common factor with φ(n) (their gcd must be 1). Otherwise step 5 is impossible. Tap a valid choice or type your own.</p>
+      <div class="panel">
+        <label for="e">e</label><input type="number" id="e" min="3">
+        <div class="echips" id="echips" aria-label="Valid choices for e"></div>
+        <div class="msg" id="emsg"></div>
+      </div>
+    </section>
+
+    <section class="step" id="s5">
+      <div class="dot">5</div>
+      <h3>Find the private exponent d</h3>
+      <p class="why">d is the number that "undoes" e. It must satisfy (e × d) mod φ(n) = 1. We find it with the Extended Euclidean Algorithm.</p>
+      <div class="panel">
+        <div class="formula big" id="df"></div>
+        <div class="formula" id="dcheck"></div>
+        <details>
+          <summary>Show the Extended Euclidean working</summary>
+          <p class="why" style="margin-top:10px">Divide repeatedly, like the normal gcd method, while tracking an extra number t. When the remainder hits 0, the last t (adjusted to be positive) is d.</p>
+          <div class="tablewrap"><table id="egtable"></table></div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <div class="keys" id="keys">
+    <div class="key pub"><div class="t">Public key (e, n)</div><div class="k" id="pubk"></div><div class="s">Share this with everyone. It can only lock messages.</div></div>
+    <div class="key priv"><div class="t">Private key (d, n)</div><div class="k" id="privk"></div><div class="s">Keep this secret. It is the only thing that can unlock them.</div></div>
+  </div>
+
+  <h2 class="phase">Part B: Send a secret message</h2>
+  <p class="phase-note">The message must be turned into a number m that is smaller than n.</p>
+
+  <div class="steps">
+    <section class="step" id="s6">
+      <div class="dot">6</div>
+      <h3>Encrypt with the public key: c = m<sup>e</sup> mod n</h3>
+      <p class="why">Anyone can do this, because e and n are public.</p>
+      <div class="panel">
+        <label for="m">Message number m</label><input type="number" id="m" min="0">
+        <div class="msg" id="mmsg"></div>
+        <div class="formula big" id="cf" style="margin-top:10px"></div>
+        <details>
+          <summary>Show the working (square and multiply)</summary>
+          <p class="why" style="margin-top:10px">Huge powers are never calculated directly. Write the exponent in binary, keep squaring m, and multiply in the squares where the bit is 1. Take mod n after every step so numbers stay small.</p>
+          <div class="tablewrap"><table id="enctable"></table></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="step" id="s7">
+      <div class="dot">7</div>
+      <h3>Decrypt with the private key: m = c<sup>d</sup> mod n</h3>
+      <p class="why">Only the owner can do this, because only they know d.</p>
+      <div class="panel">
+        <div class="formula big" id="mf"></div>
+        <div class="msg" id="matchmsg"></div>
+        <details>
+          <summary>Show the working (square and multiply)</summary>
+          <div class="tablewrap"><table id="dectable"></table></div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <h2 class="phase">Part C: Your RSA architecture</h2>
+  <p class="phase-note">The whole system drawn with your own numbers. Press play to watch the message travel, or select any box to read what it does.</p>
+  <div class="panel">
+    <div class="row">
+      <button class="primary" id="play">▶ Play the flow</button>
+      <button id="archdl">Download diagram (SVG)</button>
+    </div>
+    <div class="arch" id="arch"></div>
+    <div class="cap" id="archcap" aria-live="polite"></div>
+  </div>
+
+  <h2 class="phase">Part D: Encrypt a word</h2>
+  <p class="phase-note">Each letter becomes its character code, and each code is encrypted separately. This needs n of at least 128, so use the textbook example or random primes.</p>
+  <div class="panel">
+    <label for="word">Your message</label><input type="text" id="word" class="wide" value="HELLO" maxlength="24">
+    <div class="msg" id="wordmsg"></div>
+    <div class="tablewrap"><table id="wordtable"></table></div>
+  </div>
+
+  <h2 class="phase">Part E: Be the attacker</h2>
+  <p class="phase-note">An attacker sees only the public key. To find d, they must factor n back into p and q. With small primes, that's easy.</p>
+  <div class="panel">
+    <button class="primary" id="attack">Try to crack this key</button>
+    <div class="attack-log" id="alog" aria-live="polite"></div>
+    <div id="aresult"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX = 99999n;
+let eTouched = false, mTouched = false, attackToken = 0;
+
+function parse(v){ v = String(v).trim(); return /^\d+$/.test(v) ? BigInt(v) : null; }
+function isPrime(n){
+  if (n < 2n) return false;
+  if (n % 2n === 0n) return n === 2n;
+  for (let i = 3n; i * i <= n; i += 2n) if (n % i === 0n) return false;
+  return true;
+}
+function gcd(a,b){ while(b){ [a,b]=[b,a%b]; } return a; }
+function egcd(phi, e){
+  let r0 = phi, r1 = e, t0 = 0n, t1 = 1n; const rows = [{q:"", r0, r1, t0, t1}];
+  while (r1 !== 0n){
+    const q = r0 / r1;
+    [r0, r1] = [r1, r0 - q*r1];
+    [t0, t1] = [t1, t0 - q*t1];
+    rows.push({q, r0, r1, t0, t1});
+  }
+  let d = t0 % phi; if (d < 0n) d += phi;
+  return {d, rows, raw: t0};
+}
+function modPowSteps(b, e, n){
+  let result = 1n, base = b % n, exp = e, i = 0; const steps = [];
+  while (exp > 0n){
+    const bit = exp & 1n;
+    if (bit) result = result * base % n;
+    steps.push({i, bit, base, result});
+    base = base * base % n; exp >>= 1n; i++;
+  }
+  return {result, steps};
+}
+const pub = x => `<span class="v pub">${x}</span>`;
+const priv = x => `<span class="v priv">${x}</span>`;
+function defaultE(phi){
+  for (const c of [3n,17n,65537n]) if (c < phi && gcd(c,phi) === 1n) return c;
+  for (let c = 3n; c < phi; c += 2n) if (gcd(c,phi) === 1n) return c;
+  return null;
+}
+function validEs(phi, count){
+  const out = [];
+  for (let c = 3n; c < phi && out.length < count; c++) if (gcd(c,phi) === 1n) out.push(c);
+  return out;
+}
+function setLocked(ids, locked){ ids.forEach(id => $(id).classList.toggle('locked', locked)); }
+function setDone(ids, done){ ids.forEach(id => $(id).classList.toggle('done', done)); }
+
+function render(){
+  attackToken++; $('alog').textContent = ''; $('aresult').innerHTML = '';
+  const p = parse($('p').value), q = parse($('q').value);
+  const err = checkPrime('p', p, q) || checkPrime('q', q, p) ||
+    (p === q ? `<div>p and q must be different primes. If they were equal, n would be a perfect square and anyone could take its square root.</div>${suggest('q', q, p)}` : '');
+  $('pqmsg').className = 'msg ' + (err ? 'bad' : 'ok');
+  $('pqmsg').innerHTML = err || `Both ${p} and ${q} are prime. ✓`;
+  const later = ['s2','s3','s4','s5','s6','s7'];
+  if (err){ setLocked(later, true); setDone(['s1',...later], false); clearOutputs(); renderArch(null); return; }
+  setLocked(later, false); setDone(['s1','s2','s3'], true);
+
+  const n = p*q, phi = (p-1n)*(q-1n);
+  $('nf').innerHTML = `n = ${priv(p)} × ${priv(q)} = ${pub(n)}`;
+  $('phif').innerHTML = `φ(n) = (${priv(p)} − 1) × (${priv(q)} − 1) = ${p-1n} × ${q-1n} = ${priv(phi)}`;
+
+  if (!eTouched){ const de = defaultE(phi); $('e').value = de === null ? '' : de.toString(); }
+  const e = parse($('e').value);
+  const chips = validEs(phi, 10);
+  $('echips').innerHTML = chips.map(c => `<button type="button" aria-pressed="${e === c}" data-e="${c}">${c}</button>`).join('') + (chips.length === 10 ? '<span class="why" style="margin:0;align-self:center">and more</span>' : '');
+
+  let eErr = '';
+  if (e === null) eErr = 'Enter a whole number for e.';
+  else if (e <= 1n || e >= phi) eErr = `e must be between 1 and ${phi} (φ(n)).`;
+  else if (gcd(e, phi) !== 1n) eErr = `gcd(${e}, ${phi}) = ${gcd(e,phi)}, not 1. They share a factor, so no d exists. Pick one of the valid values above.`;
+  $('emsg').className = 'msg ' + (eErr ? 'bad' : 'ok');
+  $('emsg').textContent = eErr || `gcd(${e}, ${phi}) = 1, so e = ${e} is a valid choice.`;
+  if (eErr){ setLocked(['s5','s6','s7'], true); setDone(['s4','s5','s6','s7'], false); clearFrom5(); renderArch({p,q,n,phi}); return; }
+  setLocked(['s5','s6','s7'], false); setDone(['s4','s5'], true);
+
+  const {d, rows, raw} = egcd(phi, e);
+  $('df').innerHTML = `d = ${priv(d)}`;
+  $('dcheck').innerHTML = `Check: (${pub(e)} × ${priv(d)}) mod ${priv(phi)} = ${e*d} mod ${phi} = <strong>${(e*d)%phi}</strong> ✓`;
+  $('egtable').innerHTML = `<tr><th>Row</th><th>Quotient</th><th>Divide this</th><th>by this</th><th>t (old)</th><th>t (new)</th></tr>` +
+    rows.map((r,i) => `<tr><td>${i}</td><td>${r.q}</td><td>${r.r0}</td><td>${r.r1}</td><td>${r.t0}</td><td>${r.t1}</td></tr>`).join('') +
+    `<tr><td colspan="6" style="text-align:left;font-family:var(--sans)">Remainder reached 0. The last old t is ${raw}${raw < 0n ? `, which is negative, so add φ(n): ${raw} + ${phi} = ${d}` : ''}. So d = ${d}.</td></tr>`;
+  $('pubk').textContent = `(${e}, ${n})`;
+  $('privk').textContent = `(${d}, ${n})`;
+
+  const st = {p,q,n,phi,e,d};
+  if (!mTouched) $('m').value = (n > 65n ? 65n : 4n).toString();
+  const m = parse($('m').value);
+  let mErr = '';
+  if (m === null) mErr = 'Enter a whole number for m.';
+  else if (m >= n) mErr = `m must be smaller than n (${n}).`;
+  $('mmsg').className = 'msg bad'; $('mmsg').textContent = mErr;
+  if (mErr){ ['cf','mf','enctable','dectable'].forEach(id => $(id).innerHTML=''); $('matchmsg').textContent=''; setDone(['s6','s7'], false); }
+  else {
+    const enc = modPowSteps(m, e, n), c = enc.result;
+    $('cf').innerHTML = `c = ${m}<sup>${pub(e)}</sup> mod ${pub(n)} = <strong>${c}</strong>`;
+    $('enctable').innerHTML = powTable(enc.steps, 'm', n);
+    const dec = modPowSteps(c, d, n);
+    $('mf').innerHTML = `m = ${c}<sup>${priv(d)}</sup> mod ${pub(n)} = <strong>${dec.result}</strong>`;
+    $('dectable').innerHTML = powTable(dec.steps, 'c', n);
+    const ok = dec.result === m;
+    $('matchmsg').className = 'msg ' + (ok ? 'ok' : 'bad');
+    $('matchmsg').innerHTML = ok ? `<span class="match">It matches.</span> You sent ${m}, it travelled as ${c}, and the private key turned it back into ${m}.` : 'Something went wrong: the result does not match.';
+    setDone(['s6','s7'], ok);
+    Object.assign(st, {m, c, back: dec.result});
+  }
+  renderArch(st);
+  renderWord(n, e, d);
+}
+function smallestFactorText(x){
+  for (let i = 2n; i*i <= x; i++) if (x % i === 0n) return `It equals ${i} × ${x/i}.`;
+  return '';
+}
+function powTable(steps, sym, n){
+  return `<tr><th>Bit</th><th>Bit value</th><th>${sym}^(2^bit) mod ${n}</th><th>Running result</th></tr>` +
+    steps.map(s => `<tr><td>${s.i}</td><td>${s.bit}</td><td>${s.base}</td><td>${s.bit ? '<strong>' + s.result + '</strong>' : s.result}</td></tr>`).join('');
+}
+function clearOutputs(){
+  ['nf','phif','echips','emsg'].forEach(id => $(id).innerHTML=''); $('emsg').className='msg'; clearFrom5();
+}
+function clearFrom5(){
+  ['df','dcheck','egtable','cf','mf','enctable','dectable','mmsg','matchmsg','wordtable'].forEach(id => $(id).innerHTML='');
+  $('pubk').textContent = '—'; $('privk').textContent = '—';
+  $('wordmsg').className = 'msg bad'; $('wordmsg').textContent = 'Finish the key steps above first.';
+}
+function renderWord(n, e, d){
+  const text = $('word').value;
+  const chars = Array.from(text);
+  if (!chars.length){ $('wordmsg').className='msg bad'; $('wordmsg').textContent='Type a message to encrypt.'; $('wordtable').innerHTML=''; return; }
+  const big = chars.find(ch => BigInt(ch.codePointAt(0)) >= n);
+  if (big){
+    $('wordmsg').className='msg bad';
+    $('wordmsg').textContent = `n is ${n}, but "${big}" has code ${big.codePointAt(0)}. Every code must be smaller than n. Try the textbook example (61, 53).`;
+    $('wordtable').innerHTML=''; return;
+  }
+  const rows = chars.map(ch => {
+    const code = BigInt(ch.codePointAt(0));
+    const c = modPowSteps(code, e, n).result;
+    const back = modPowSteps(c, d, n).result;
+    return {ch, code, c, back, out: String.fromCodePoint(Number(back))};
+  });
+  const ok = rows.every(r => r.back === r.code);
+  $('wordmsg').className = 'msg ' + (ok ? 'ok' : 'bad');
+  $('wordmsg').textContent = ok ? `Sent as: ${rows.map(r=>r.c).join(' ')}. Decrypted back to: "${rows.map(r=>r.out).join('')}".` : 'Decryption did not match.';
+  $('wordtable').innerHTML = `<tr><th>Letter</th><th>Code (m)</th><th>Encrypted (c)</th><th>Decrypted</th><th>Letter</th></tr>` +
+    rows.map(r => `<tr><td>${r.ch === ' ' ? '(space)' : escapeHtml(r.ch)}</td><td>${r.code}</td><td>${pub(r.c)}</td><td>${r.back}</td><td>${r.out === ' ' ? '(space)' : escapeHtml(r.out)}</td></tr>`).join('');
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function attack(){
+  const p = parse($('p').value), q = parse($('q').value), e = parse($('e').value);
+  if ($('s5').classList.contains('locked') || p === null){ $('alog').textContent = 'Finish making a valid key first.'; return; }
+  const n = p*q, token = ++attackToken;
+  $('aresult').innerHTML = '';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let found = null, tries = 0;
+  const limit = BigInt(Math.floor(Math.sqrt(Number(n)))) + 1n;
+  const total = Number(limit);
+  const perFrame = Math.max(1, Math.ceil(total / 90));
+  for (let i = 2n; i <= limit; i++){
+    tries++;
+    if (n % i === 0n){ found = i; break; }
+    if (!reduce && tries % perFrame === 0){
+      $('alog').textContent = `I only know n = ${n}. Trying to divide by ${i}… (${tries} tries)`;
+      await new Promise(r => requestAnimationFrame(r));
+      if (token !== attackToken) return;
+    }
+  }
+  if (!found) return;
+  const fp = found, fq = n / found, phi = (fp-1n)*(fq-1n), d = egcd(phi, e).d;
+  $('alog').textContent = `Found it after ${tries} tries: ${n} = ${fp} × ${fq}.`;
+  $('aresult').innerHTML = `
+    <div class="formula">φ(n) = (${fp} − 1) × (${fq} − 1) = ${priv(phi)}</div>
+    <div class="formula">d = inverse of ${e} mod ${phi} = ${priv(d)}</div>
+    <div class="msg bad"><strong>Private key stolen.</strong> The attacker now has (${d}, ${n}) and can read every message.</div>
+    <p class="why" style="margin-top:14px">So why is real RSA safe? A real n has about 617 digits. Dividing by every number up to √n would take around 10<sup>308</sup> tries. Even the best known factoring method, running on every computer on Earth, would need far longer than the age of the universe. Small primes are breakable. Large primes are not.</p>`;
+}
+
+// prime suggestions
+function nextPrime(x){ let i = x < 2n ? 2n : x + 1n; while (!isPrime(i)) i++; return i; }
+function prevPrime(x){ for (let i = x - 1n; i >= 3n; i--) if (isPrime(i)) return i; return null; }
+function suggest(field, x, other){
+  let picks = [];
+  if (x === null || x < 3n) picks = [3n, 5n, 7n, 11n];
+  else if (x > MAX) picks = [prevPrime(MAX + 1n), prevPrime(prevPrime(MAX + 1n))];
+  else { const a = prevPrime(x), b = nextPrime(x); picks = [a, b <= MAX ? b : null]; }
+  picks = picks.filter(v => v !== null && v >= 3n && v !== other);
+  if (picks.length < 2 && x !== null && x >= 3n && x <= MAX){
+    let v = x; while (picks.length < 2){ v = nextPrime(v); if (v !== other && v <= MAX && !picks.includes(v)) picks.push(v); else if (v > MAX) break; }
+  }
+  return `<div class="sugg">Try a prime for ${field}: ${picks.map(v => `<button type="button" data-fill="${field}" data-val="${v}">${v}</button>`).join('')}</div>`;
+}
+function checkPrime(field, x, other){
+  if (x === null) return `<div>Enter a whole number for ${field}.</div>${suggest(field, x, other)}`;
+  if (x > MAX) return `<div>${x} is too big for this demo. Keep ${field} at 99999 or less.</div>${suggest(field, x, other)}`;
+  if (x < 3n) return `<div>Use a prime of 3 or bigger for ${field}.</div>${suggest(field, x, other)}`;
+  if (!isPrime(x)) return `<div><strong>${x} is not prime.</strong> ${smallestFactorText(x)}</div>${suggest(field, x, other)}`;
+  return '';
+}
+
+// live architecture diagram
+const COLX = [10, 190, 370, 550, 730], NW = 160, CX = i => COLX[i] + NW / 2;
+let archCaps = {}, playToken = 0;
+function nodeSvg(id, col, y, h, kind, title, value, hint){
+  const x = COLX[col], cx = x + NW / 2;
+  return `<g class="nd ${kind}" data-id="${id}" tabindex="0" role="button" aria-label="${title}: ${value}">
+    <rect x="${x}" y="${y}" width="${NW}" height="${h}" rx="10"/>
+    <text class="t" x="${cx}" y="${y + 19}">${title}</text>
+    <text class="v" x="${cx}" y="${y + h / 2 + 7}">${value}</text>
+    <text class="h" x="${cx}" y="${y + h - 9}">${hint}</text></g>`;
+}
+function renderArch(st){
+  playToken++;
+  const has = k => st && st[k] !== undefined, v = (k, f) => has(k) ? (f ? f(st[k]) : st[k]) : '—';
+  const keysOk = has('d'), msgOk = has('c');
+  const off = ok => ok ? '' : ' off';
+  const a = (d, cls = '', m = 'ah') => `<path class="ar ${cls}" d="${d}" marker-end="url(#${m})"/>`;
+  const R1 = 42, R2 = 134, R3 = 262, R4 = 380;
+  let s = `<svg viewBox="0 0 900 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RSA architecture with your numbers">
+  <defs>${[['ah','ah'],['ahp','ahp'],['ahv','ahv'],['ahb','ahb']].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="${c}" d="M0,0 L10,5 L0,10 z"/></marker>`).join('')}</defs>
+  <rect class="lane" x="0" y="6" width="900" height="198" rx="12"/><text class="lt" x="14" y="28">1 · Key generation</text><text class="note" x="886" y="28" text-anchor="end">done once by the receiver</text>
+  <rect class="lane" x="0" y="220" width="900" height="126" rx="12"/><text class="lt" x="14" y="242">2 · Encrypt → send → decrypt</text>
+  <rect class="lane" x="0" y="362" width="900" height="102" rx="12"/><text class="lt" x="14" y="384">3 · What an attacker sees</text>
+  <text class="note" x="14" y="414">Real keys: n has ~617 digits,</text><text class="note" x="14" y="432">so factoring it is infeasible.</text>`;
+  for (let i = 0; i < 4; i++) s += a(`M${COLX[i] + NW},${R1 + 33} L${COLX[i + 1] - 2},${R1 + 33}`);
+  s += `<path class="ar" d="M${CX(4)},${R1 + 66} L${CX(4)},120 L${CX(1)},120"/>` + a(`M${CX(1)},120 L${CX(1)},${R2 - 2}`) + a(`M${CX(3)},120 L${CX(3)},${R2 - 2}`);
+  for (let i = 0; i < 4; i++) s += a(`M${COLX[i] + NW},${R3 + 35} L${COLX[i + 1] - 2},${R3 + 35}`);
+  s += a(`M${CX(1)},${R2 + 58} L${CX(1)},${R3 - 2}`, 'pub', 'ahp') + a(`M${CX(3)},${R2 + 58} L${CX(3)},${R3 - 2}`, 'priv', 'ahv');
+  s += a(`M${CX(2)},${R3 + 70} L${CX(2)},${R4 - 2}`, 'bad', 'ahb') + a(`M${COLX[2] + NW},${R4 + 33} L${COLX[3] - 2},${R4 + 33}`, 'bad', 'ahb') + a(`M${COLX[3] + NW},${R4 + 33} L${COLX[4] - 2},${R4 + 33}`, 'bad', 'ahb');
+  s += nodeSvg('k1', 0, R1, 66, 'priv' + off(st), 'Two primes', st ? `${st.p} · ${st.q}` : '—', 'p, q (secret)')
+     + nodeSvg('k2', 1, R1, 66, 'pub' + off(has('n')), 'Modulus n', v('n'), 'n = p × q')
+     + nodeSvg('k3', 2, R1, 66, 'priv' + off(has('phi')), 'φ(n)', v('phi'), '(p−1)(q−1)')
+     + nodeSvg('k4', 3, R1, 66, 'pub' + off(has('e')), 'Public exponent', v('e'), 'gcd(e, φ) = 1')
+     + nodeSvg('k5', 4, R1, 66, 'priv' + off(keysOk), 'Private exponent', v('d'), 'e·d ≡ 1 (mod φ)')
+     + nodeSvg('pk', 1, R2, 58, 'pub' + off(keysOk), 'Public key', keysOk ? `(${st.e}, ${st.n})` : '—', 'share with everyone')
+     + nodeSvg('sk', 3, R2, 58, 'priv' + off(keysOk), 'Private key', keysOk ? `(${st.d}, ${st.n})` : '—', 'keep secret')
+     + nodeSvg('s1', 0, R3, 70, '' + off(msgOk), 'Message', v('m'), 'm < n')
+     + nodeSvg('s2', 1, R3, 70, 'pub' + off(msgOk), 'Encrypt', v('c', x => 'c = ' + x), 'c = mᵉ mod n')
+     + nodeSvg('s3', 2, R3, 70, 'net' + off(msgOk), 'Network', v('c'), 'everyone sees c')
+     + nodeSvg('s4', 3, R3, 70, 'priv' + off(msgOk), 'Decrypt', v('back', x => 'm = ' + x), 'm = cᵈ mod n')
+     + nodeSvg('s5', 4, R3, 70, 'ok' + off(msgOk), 'Received', msgOk ? `${st.back} ${st.back === st.m ? '✓' : '✗'}` : '—', 'same as m')
+     + nodeSvg('a1', 2, R4, 66, 'bad' + off(msgOk), 'Attacker sees', 'e, n, c', 'but not d')
+     + nodeSvg('a2', 3, R4, 66, 'bad' + off(has('n')), 'Must factor n', has('n') ? `${st.n} = ?` : '—', 'to rebuild φ and d')
+     + nodeSvg('a3', 4, R4, 66, 'bad' + off(st), 'Toy key cracked', st ? `${st.p} × ${st.q}` : '—', 'small n falls fast');
+  s += `<g class="pkt" id="pkt" style="opacity:0;transform:translate(${CX(0)}px,240px)"><rect id="pktr" x="-20" y="-11" width="40" height="22" rx="11"/><text y="4" id="pktt"></text></g></svg>`;
+  $('arch').innerHTML = s;
+
+  const P = st ? st.p : 'p', Q = st ? st.q : 'q';
+  archCaps = {
+    k1: ['Two primes', `The receiver secretly picks p = ${P} and q = ${Q}. Everything else is built from these.`],
+    k2: ['Modulus n', has('n') ? `n = ${P} × ${Q} = ${st.n}. It is public, and hiding p and q inside it is RSA's whole secret.` : 'Needs two valid primes first.'],
+    k3: ['φ(n)', has('phi') ? `φ(n) = (${P} − 1) × (${Q} − 1) = ${st.phi}. Easy for the owner, impossible to get from n alone when n is large.` : 'Needs two valid primes first.'],
+    k4: ['Public exponent e', has('e') ? `e = ${st.e} shares no factor with φ(n) = ${st.phi}, so a matching d exists.` : 'Pick a valid e in step 4.'],
+    k5: ['Private exponent d', keysOk ? `d = ${st.d}, because ${st.e} × ${st.d} = ${st.e * st.d}, which leaves remainder 1 when divided by ${st.phi}.` : 'Appears once e is valid.'],
+    pk: ['Public key', keysOk ? `(${st.e}, ${st.n}) goes to everyone. It can lock messages but never unlock them.` : 'Appears once the key steps are valid.'],
+    sk: ['Private key', keysOk ? `(${st.d}, ${st.n}) never leaves the receiver. It is the only way to unlock.` : 'Appears once the key steps are valid.'],
+    s1: ['Message', msgOk ? `The sender wants to send m = ${st.m}. It must be smaller than n = ${st.n}.` : 'Enter a message number in step 6.'],
+    s2: ['Encrypt', msgOk ? `${st.m}<sup>${st.e}</sup> mod ${st.n} = ${st.c}. Done with the public key, so anyone can send.` : 'Waiting for a valid message.'],
+    s3: ['Network', msgOk ? `Only ${st.c} travels. Anyone listening sees ${st.c}, not ${st.m}.` : 'Waiting for a valid message.'],
+    s4: ['Decrypt', msgOk ? `${st.c}<sup>${st.d}</sup> mod ${st.n} = ${st.back}. Only the private key can do this.` : 'Waiting for a valid message.'],
+    s5: ['Received', msgOk ? (st.back === st.m ? `${st.back} is exactly the ${st.m} that was sent. Encryption and decryption cancel out.` : 'The result does not match.') : 'Waiting for a valid message.'],
+    a1: ['Attacker sees', msgOk ? `e = ${st.e}, n = ${st.n} and c = ${st.c}. Without d, c stays locked.` : 'The attacker sees only public values.'],
+    a2: ['Must factor n', has('n') ? `To get d, the attacker must split ${st.n} back into its two primes.` : 'Needs two valid primes first.'],
+    a3: ['Toy key cracked', st ? `${st.n} is tiny, so trial division finds ${P} × ${Q} almost instantly. Try it in Part E.` : 'Needs two valid primes first.'],
+  };
+  $('archcap').innerHTML = st ? '<span class="why">Select a box, or press play.</span>' : '<span class="why">Fix p and q in step 1 to draw the architecture.</span>';
+}
+function showCap(id){
+  document.querySelectorAll('#arch .nd.on').forEach(n => n.classList.remove('on'));
+  const g = document.querySelector(`#arch .nd[data-id="${id}"]`); if (g) g.classList.add('on');
+  const [t, txt] = archCaps[id] || ['', ''];
+  $('archcap').innerHTML = `<strong>${t}</strong>${txt}`;
+}
+const PKT = {s1: ['m', 0], s2: ['c', 1], s3: ['c', 2], s4: ['m', 3], s5: ['m', 4]};
+async function playFlow(){
+  const token = ++playToken;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const order = ['k1','k2','k3','k4','k5','pk','sk','s1','s2','s3','s4','s5','a1','a2','a3'];
+  const pkt = $('pkt'), pktt = $('pktt');
+  for (const id of order){
+    if (token !== playToken) return;
+    const g = document.querySelector(`#arch .nd[data-id="${id}"]`);
+    if (!g || g.classList.contains('off')) break;
+    showCap(id);
+    if (PKT[id]){
+      const [kind, col] = PKT[id];
+      const val = g.querySelector('.v').textContent.replace(/^[mc] = /, '').replace(/ [✓✗]$/, '');
+      const label = `${kind} = ${val}`, w = label.length * 7 + 18;
+      $('pktr').setAttribute('x', -w / 2); $('pktr').setAttribute('width', w);
+      pktt.textContent = label; pkt.style.opacity = 1;
+      pkt.style.transform = `translate(${CX(col)}px,240px)`;
+    } else if (id === 'a1') pkt.style.opacity = 0;
+    await new Promise(r => setTimeout(r, reduce ? 900 : 1300));
+  }
+}
+function exportArch(){
+  const src = document.querySelector('#arch svg'); if (!src) return;
+  const clone = src.cloneNode(true), a = src.querySelectorAll('*'), b = clone.querySelectorAll('*');
+  const props = ['fill','stroke','stroke-width','stroke-dasharray','opacity','font-family','font-size','font-weight','text-anchor'];
+  a.forEach((el, i) => { const cs = getComputedStyle(el); b[i].removeAttribute('class'); b[i].setAttribute('style', props.map(p => `${p}:${cs.getPropertyValue(p)}`).join(';')); });
+  clone.querySelector('#pkt')?.remove();
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('width', '900'); bg.setAttribute('height', '470'); bg.setAttribute('fill', getComputedStyle(document.body).backgroundColor);
+  clone.insertBefore(bg, clone.firstChild);
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)], {type: 'image/svg+xml'});
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'my-rsa-architecture.svg'; link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+// events
+$('pqmsg').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-fill]'); if (!b) return;
+  $(b.dataset.fill).value = b.dataset.val; eTouched = false; mTouched = false; render(); $(b.dataset.fill).focus();
+});
+$('arch').addEventListener('click', ev => { const g = ev.target.closest('.nd'); if (g && !g.classList.contains('off')){ playToken++; showCap(g.dataset.id); } });
+$('arch').addEventListener('keydown', ev => { const g = ev.target.closest('.nd'); if (g && (ev.key === 'Enter' || ev.key === ' ')){ ev.preventDefault(); playToken++; showCap(g.dataset.id); } });
+$('play').addEventListener('click', playFlow);
+$('archdl').addEventListener('click', exportArch);
+$('p').addEventListener('input', () => { eTouched = false; mTouched = false; render(); });
+$('q').addEventListener('input', () => { eTouched = false; mTouched = false; render(); });
+$('e').addEventListener('input', () => { eTouched = true; render(); });
+$('m').addEventListener('input', () => { mTouched = true; render(); });
+$('word').addEventListener('input', render);
+$('echips').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-e]'); if (!b) return;
+  $('e').value = b.dataset.e; eTouched = true; render();
+});
+document.querySelectorAll('button[data-p]').forEach(b => b.addEventListener('click', () => {
+  $('p').value = b.dataset.p; $('q').value = b.dataset.q; eTouched = false; mTouched = false; render();
+}));
+$('rand').addEventListener('click', () => {
+  const primes = []; for (let i = 50n; i < 500n; i++) if (isPrime(i)) primes.push(i);
+  let a, b; do { a = primes[Math.floor(Math.random()*primes.length)]; b = primes[Math.floor(Math.random()*primes.length)]; } while (a === b);
+  $('p').value = a; $('q').value = b; eTouched = false; mTouched = false; render();
+});
+$('attack').addEventListener('click', attack);
+render();
+</script>
+</body>
+</html>
