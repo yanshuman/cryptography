@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elliptic Curve Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --ink:#16203A; --muted:#56617C; --line:#D3DAE7; --grid:#E3E8F0;
+  --pub:#2747C9; --pub-soft:#E3E9FB; --priv:#9A6200; --priv-soft:#FBEFD6;
+  --ok:#1C7A50; --ok-soft:#DCF2E6; --bad:#B23A26; --bad-soft:#F9E1DC; --vio:#6A3FC9; --vio-soft:#EEE8FB;
+  --sans:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+    --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+    --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+  --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+  --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:40px 16px 80px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-0.02em}
+header p{margin:0;color:var(--muted);max-width:64ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{padding:4px 12px;border-radius:999px;font-size:.86rem;font-weight:700}
+.chip.pub{background:var(--pub-soft);color:var(--pub)} .chip.priv{background:var(--priv-soft);color:var(--priv)} .chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.vio{background:var(--vio-soft);color:var(--vio)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+nav.toc a{font-size:.88rem;font-weight:700;padding:5px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+nav.toc a:hover{border-color:var(--ink)}
+.phase{font-size:1.4rem;font-weight:800;margin:56px 0 6px;scroll-margin-top:16px}
+.phase-note{color:var(--muted);margin:0 0 16px;max-width:68ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 20px;margin-bottom:10px}
+.ctl label{display:flex;justify-content:space-between;font-size:.88rem;font-weight:700;margin-bottom:2px}
+.ctl label output{font-family:var(--mono);font-weight:600;color:var(--pub)}
+input[type=range]{width:100%;accent-color:var(--pub)}
+input[type=number]{font-family:var(--mono);font-size:1rem;padding:7px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:110px}
+.field label{display:block;font-size:.88rem;font-weight:700;margin-bottom:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-end}
+button{font-family:var(--sans);font-size:.9rem;font-weight:700;padding:7px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button[aria-pressed="true"]{background:var(--pub);color:var(--surface);border-color:var(--pub)}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--pub);outline-offset:2px}
+.stage{width:100%;height:auto;display:block;background:var(--bg);border-radius:12px;touch-action:none;cursor:crosshair;margin-top:10px}
+.stage .grid{stroke:var(--grid);stroke-width:1}
+.stage .axis{stroke:var(--line);stroke-width:1.5}
+.stage .curve{fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round}
+.stage .chord{stroke:var(--vio);stroke-width:2}
+.stage .refl{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 5}
+.stage .ptP{fill:var(--pub)} .stage .ptQ{fill:var(--priv)} .stage .ptR{fill:var(--ok)}
+.stage .ptN{fill:var(--bg);stroke:var(--vio);stroke-width:2.5}
+.stage text{font-family:var(--sans);font-size:15px;font-weight:800;fill:var(--ink)}
+.stage text.pub{fill:var(--pub)} .stage text.priv{fill:var(--priv)} .stage text.okc{fill:var(--ok)} .stage text.vio{fill:var(--vio)} .stage text.mut{fill:var(--muted);font-weight:600;font-size:12px}
+.stage .fp{fill:var(--muted)} .stage .fp:hover{fill:var(--ink)}
+.stage .hop{fill:none;stroke:var(--vio);stroke-width:1.2;stroke-opacity:.55}
+.stage .mark{stroke:var(--surface);stroke-width:2}
+.stage .mG{fill:var(--ink)} .stage .mA{fill:var(--pub)} .stage .mB{fill:var(--priv)} .stage .mS{fill:var(--ok)} .stage .mK{fill:var(--vio)}
+.stage text.lab{font-size:13px;paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.formula{font-family:var(--mono);font-size:.98rem;margin:4px 0;overflow-x:auto;white-space:nowrap}
+.big{font-size:1.1rem;font-weight:600}
+.v{padding:1px 7px;border-radius:6px;font-weight:600}
+.v.pub{background:var(--pub-soft);color:var(--pub)} .v.priv{background:var(--priv-soft);color:var(--priv)} .v.ok{background:var(--ok-soft);color:var(--ok)} .v.vio{background:var(--vio-soft);color:var(--vio)}
+.box{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+.msg{margin-top:10px;padding:8px 12px;border-radius:10px;font-size:.93rem}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.bad{background:var(--bad-soft);color:var(--bad)} .msg.info{background:var(--pub-soft);color:var(--pub)}
+.msg:empty{display:none}
+.msg .sugg{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;color:var(--ink)}
+.msg .sugg button{font-family:var(--mono);padding:3px 10px;border-color:var(--ok);color:var(--ok);background:var(--surface)}
+.why{color:var(--muted);font-size:.95rem;margin:10px 0 0;max-width:72ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.stat .k{font-size:.8rem;font-weight:700;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-size:1.05rem;font-weight:600}
+.stat .f{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.key{border-radius:14px;padding:14px 16px;border:2px solid}
+.key.pub{border-color:var(--pub);background:var(--pub-soft)} .key.priv{border-color:var(--priv);background:var(--priv-soft)}
+.key .t{font-weight:800} .key .k{font-family:var(--mono);font-size:1.05rem;font-weight:600;margin:4px 0}
+.key.pub .k{color:var(--pub)} .key.priv .k{color:var(--priv)}
+.key .s{font-size:.88rem;color:var(--muted)}
+details{margin-top:10px} summary{cursor:pointer;font-weight:700;font-size:.92rem;color:var(--pub)}
+.tablewrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.86rem;min-width:100%}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--sans);font-weight:700;color:var(--muted);font-size:.8rem}
+th:first-child,td:first-child{text-align:left}
+.log{font-family:var(--mono);font-size:.95rem;margin-top:10px;min-height:1.5em}
+footer{margin-top:60px;color:var(--muted);font-size:.92rem}
+footer a{color:var(--pub)}
+@media (max-width:560px){.keys{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Elliptic curves, hands on</h1>
+    <p>An elliptic curve is the set of points satisfying y² = x³ + ax + b. Its points can be <em>added</em> to each other, and repeating that addition is easy to do but practically impossible to undo. That one-way step protects HTTPS, Bitcoin, Signal and SSH.</p>
+    <div class="chips"><span class="chip pub">Small keys</span><span class="chip ok">Fast &amp; low power</span><span class="chip priv">Used everywhere</span><span class="chip vio">Strong security per bit</span></div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#real">1 · Add points</a><a href="#field">2 · Finite field</a><a href="#ecdh">3 · Key exchange</a><a href="#attack">4 · Be the attacker</a>
+    </nav>
+  </header>
+
+  <!-- 1. Real curve -->
+  <h2 class="phase" id="real">1 · Adding points on the curve</h2>
+  <p class="phase-note">To add P and Q: draw the line through them, find where it hits the curve a third time, then flip that point over the x-axis. The flipped point is P + Q. To double a point (P + P), use the tangent line at P. Click on the curve to move P and Q.</p>
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl"><label for="ra">a <output id="rao"></output></label><input type="range" id="ra" min="-5" max="5" step="0.1" value="-1"></div>
+      <div class="ctl"><label for="rb">b <output id="rbo"></output></label><input type="range" id="rb" min="-5" max="8" step="0.1" value="1"></div>
+    </div>
+    <div class="row">
+      <button id="mAdd" aria-pressed="true">P + Q</button><button id="mDbl" aria-pressed="false">2P (doubling)</button>
+      <span style="width:8px"></span>
+      <button data-ab="-1,1">One piece</button><button data-ab="-3,1">Two pieces</button><button data-ab="0,7">Bitcoin shape (a=0, b=7)</button><button data-ab="0,0">Broken (a=0, b=0)</button>
+    </div>
+    <svg class="stage" id="rs" viewBox="0 0 800 560" role="img" aria-label="Elliptic curve over the real numbers with point addition"></svg>
+    <div class="msg" id="rmsg"></div>
+    <div class="box" id="rcalc"></div>
+  </div>
+
+  <!-- 2. Finite field -->
+  <h2 class="phase" id="field">2 · The same curve over a finite field</h2>
+  <p class="phase-note">Cryptography uses whole numbers modulo a prime p instead of real numbers. The smooth curve becomes a scatter of dots, but the addition formulas stay exactly the same, just done mod p. Click any dot to make it the base point G, then slide k to watch k·G jump around.</p>
+  <div class="panel">
+    <div class="row">
+      <div class="field"><label for="fp">Prime p</label><input type="number" id="fp" value="97" min="5" max="997"></div>
+      <div class="field"><label for="fa">a</label><input type="number" id="fa" value="2"></div>
+      <div class="field"><label for="fb">b</label><input type="number" id="fb" value="3"></div>
+      <button data-fab="97,2,3">p = 97</button><button data-fab="17,2,2">Tiny p = 17</button><button data-fab="263,0,7">p = 263, a=0, b=7</button><button data-fab="991,3,7">p = 991</button>
+    </div>
+    <div class="msg" id="fmsg"></div>
+    <svg class="stage" id="fs" viewBox="0 0 560 560" role="img" aria-label="Points of the elliptic curve over a finite field" style="max-width:560px;margin-left:auto;margin-right:auto"></svg>
+    <div class="ctl" style="margin-top:12px"><label for="fk">k (multiply G by k) <output id="fko"></output></label><input type="range" id="fk" min="1" max="10" step="1" value="5"></div>
+    <div class="formula big" id="fkres"></div>
+    <div class="stats" id="fstats"></div>
+    <p class="why">Notice how G, 2G, 3G, … land in no visible pattern. Knowing the result k·G gives no clue about k. That is the whole security idea.</p>
+  </div>
+
+  <!-- 3. ECDH -->
+  <h2 class="phase" id="ecdh">3 · Key exchange (ECDH)</h2>
+  <p class="phase-note">Alice and Bob agree on the curve and G in public. Each picks a secret number, multiplies G by it, and sends the result. Each then multiplies the other's point by their own secret, and both land on the same point. Eve sees everything sent but not the secrets.</p>
+  <div class="panel">
+    <div class="row">
+      <div class="field"><label for="da">Alice's secret α</label><input type="number" id="da" value="13" min="1"></div>
+      <div class="field"><label for="db">Bob's secret β</label><input type="number" id="db" value="29" min="1"></div>
+      <button id="drand">Random secrets</button>
+    </div>
+    <div class="msg" id="dmsg"></div>
+    <div class="keys">
+      <div class="key pub"><div class="t">Alice sends A = α·G</div><div class="k" id="kA"></div><div class="s">Public. Anyone can see it.</div></div>
+      <div class="key pub"><div class="t">Bob sends B = β·G</div><div class="k" id="kB"></div><div class="s">Public. Anyone can see it.</div></div>
+      <div class="key priv"><div class="t">Alice computes α·B</div><div class="k" id="kSA"></div><div class="s">Uses her secret α = <span id="sa"></span></div></div>
+      <div class="key priv"><div class="t">Bob computes β·A</div><div class="k" id="kSB"></div><div class="s">Uses his secret β = <span id="sb"></span></div></div>
+    </div>
+    <div class="msg" id="dmatch"></div>
+    <svg class="stage" id="ds" viewBox="0 0 560 560" role="img" aria-label="Key exchange points on the curve" style="max-width:560px;margin-left:auto;margin-right:auto"></svg>
+    <details>
+      <summary>Show how A = α·G is computed (double-and-add)</summary>
+      <p class="why">Adding G to itself α times would be slow for huge α. Instead, write α in binary and keep doubling G, adding in the doublings where the bit is 1. Even a 256-bit secret takes only about 256 doublings.</p>
+      <div class="tablewrap"><table id="dtable"></table></div>
+    </details>
+  </div>
+
+  <!-- 4. Attacker -->
+  <h2 class="phase" id="attack">4 · Be the attacker</h2>
+  <p class="phase-note">Eve knows the curve, G, A and B. To find the shared secret she must recover α from A = α·G. This is the <strong>elliptic-curve discrete logarithm problem</strong>. On this toy curve she can simply try every k.</p>
+  <div class="panel">
+    <button class="primary" id="atk">Try to find Alice's secret</button>
+    <div class="log" id="alog" aria-live="polite"></div>
+    <div id="ares"></div>
+  </div>
+
+  <footer>
+    <p>Real curves use a prime p about 2²⁵⁶ and a group of about 10⁷⁷ points. Read the <a href="README.md">elliptic curve guide</a> for the math, real-world curves, and questions &amp; answers. Start with the <a href="../ellipse/">Ellipse Lab</a> to see where the name comes from.</p>
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const f2 = n => (Math.abs(n) < 5e-10 ? 0 : n).toFixed(2);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- 1. Real curve ---------------- */
+const RX0 = -5, RX1 = 5, RY1 = 7, SX = 80, SY = 40;
+const RX = x => (x - RX0) * SX, RY = y => (RY1 - y) * SY;
+let mode = 'add', nextPick = 'P', Pr = null, Qr = null, samples = [];
+const rf = (x, a, b) => x * x * x + a * x + b;
+
+function curvePath(a, b){
+  const nx = 200, ny = 140, dx = (RX1 - RX0) / nx, dy = 14 / ny, F = [];
+  for (let j = 0; j <= ny; j++){ F[j] = []; const y = RY1 - j * dy; for (let i = 0; i <= nx; i++){ const x = RX0 + i * dx; F[j][i] = y * y - rf(x, a, b); } }
+  let d = '';
+  const lerp = (v1, v2) => v1 / (v1 - v2);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){
+    const v = [F[j][i], F[j][i + 1], F[j + 1][i + 1], F[j + 1][i]];
+    const px = [i, i + 1, i + 1, i], py = [j, j, j + 1, j + 1], pts = [];
+    for (let k = 0; k < 4; k++){ const k2 = (k + 1) % 4; if ((v[k] > 0) !== (v[k2] > 0)){ const t = lerp(v[k], v[k2]); pts.push([(px[k] + (px[k2] - px[k]) * t) * dx * SX, (py[k] + (py[k2] - py[k]) * t) * dy * SY]); } }
+    for (let k = 0; k + 1 < pts.length; k += 2) d += `M${pts[k][0].toFixed(1)},${pts[k][1].toFixed(1)}L${pts[k + 1][0].toFixed(1)},${pts[k + 1][1].toFixed(1)}`;
+  }
+  return d;
+}
+function buildSamples(a, b){
+  samples = [];
+  for (let x = RX0; x <= RX1; x += 0.002){ const v = rf(x, a, b); if (v >= 0){ const y = Math.sqrt(v); if (y <= RY1 + 3){ samples.push([x, y]); samples.push([x, -y]); } } }
+}
+function snap(x, y){
+  let best = null, bd = Infinity;
+  for (const [sx, sy] of samples){ const d = ((sx - x) * SX) ** 2 + ((sy - y) * SY) ** 2; if (d < bd){ bd = d; best = [sx, sy]; } }
+  return best;
+}
+function addReal(P, Q, a){
+  if (!P) return {R: Q}; if (!Q) return {R: P};
+  const [x1, y1] = P, [x2, y2] = Q, same = Math.abs(x1 - x2) < 1e-9 && Math.abs(y1 - y2) < 1e-9;
+  if (!same && Math.abs(x1 - x2) < 1e-9) return {R: null, vertical: x1};
+  if (same && Math.abs(y1) < 1e-9) return {R: null, vertical: x1};
+  const lam = same ? (3 * x1 * x1 + a) / (2 * y1) : (y2 - y1) / (x2 - x1);
+  const x3 = lam * lam - x1 - x2, y3 = lam * (x1 - x3) - y1;
+  return {R: [x3, y3], lam, same};
+}
+function renderReal(){
+  const a = +$('ra').value, b = +$('rb').value;
+  $('rao').textContent = f2(a); $('rbo').textContent = f2(b);
+  const disc = 4 * a ** 3 + 27 * b ** 2;
+  buildSamples(a, b);
+  const resnap = (p, fallbackX, sign) => { const x = p ? p[0] : fallbackX; const v = rf(x, a, b); return v >= 0 ? [x, (p ? Math.sign(p[1]) || sign : sign) * Math.sqrt(v)] : snap(x, 0); };
+  Pr = resnap(Pr, -1, 1); Qr = resnap(Qr, 0.3, -1);
+  const Q = mode === 'add' ? Qr : Pr;
+  const res = Math.abs(disc) < 1e-9 ? null : addReal(Pr, Q, a);
+  let s = '';
+  for (let i = -5; i <= 5; i++) s += `<line class="grid" x1="${RX(i)}" y1="0" x2="${RX(i)}" y2="560"/>`;
+  for (let j = -7; j <= 7; j++) s += `<line class="grid" x1="0" y1="${RY(j)}" x2="800" y2="${RY(j)}"/>`;
+  s += `<line class="axis" x1="0" y1="${RY(0)}" x2="800" y2="${RY(0)}"/><line class="axis" x1="${RX(0)}" y1="0" x2="${RX(0)}" y2="560"/>`;
+  s += `<path class="curve" d="${curvePath(a, b)}"/>`;
+  const dot = (p, cls, r = 7) => `<circle class="${cls}" cx="${RX(p[0])}" cy="${RY(p[1])}" r="${r}"/>`;
+  const lab = (p, t, cls, dx = 12, dy = -10) => `<text class="${cls} lab" x="${RX(p[0]) + dx}" y="${RY(p[1]) + dy}">${t}</text>`;
+  let calc = '';
+  $('rmsg').className = 'msg'; $('rmsg').textContent = '';
+  if (Math.abs(disc) < 1e-9){
+    $('rmsg').className = 'msg bad';
+    $('rmsg').textContent = `4a³ + 27b² = 0, so this curve has a sharp point (a cusp or a self-crossing). It is "singular" and NOT an elliptic curve: point addition breaks at that point. Move a or b.`;
+  } else if (res){
+    if (res.R){
+      const [x3, y3] = res.R, N = [x3, -y3];
+      const yl = x => res.lam * (x - Pr[0]) + Pr[1];
+      s += `<line class="chord" x1="${RX(RX0)}" y1="${RY(yl(RX0))}" x2="${RX(RX1)}" y2="${RY(yl(RX1))}"/>`;
+      s += `<line class="refl" x1="${RX(x3)}" y1="${RY(-y3)}" x2="${RX(x3)}" y2="${RY(y3)}"/>`;
+      s += dot(N, 'ptN', 7) + lab(N, mode === 'add' ? '−(P+Q)' : '−2P', 'vio') + dot(res.R, 'ptR', 8) + lab(res.R, mode === 'add' ? 'P + Q' : '2P', 'okc');
+      const off = Math.abs(x3) > 5 || Math.abs(y3) > 7;
+      if (off){ $('rmsg').className = 'msg info'; $('rmsg').textContent = `The result is off-screen at (${f2(x3)}, ${f2(y3)}). Move P or Q closer together.`; }
+      const on = Math.abs(y3 * y3 - rf(x3, a, b)) < 1e-6 * Math.max(1, Math.abs(y3 * y3));
+      calc = (mode === 'add'
+        ? `<div class="formula">slope λ = (y₂ − y₁) / (x₂ − x₁) = (${f2(Q[1])} − ${f2(Pr[1])}) / (${f2(Q[0])} − ${f2(Pr[0])}) = <span class="v vio">${f2(res.lam)}</span></div>`
+        : `<div class="formula">tangent slope λ = (3x₁² + a) / (2y₁) = (3·${f2(Pr[0])}² + ${f2(a)}) / (2·${f2(Pr[1])}) = <span class="v vio">${f2(res.lam)}</span></div>`)
+        + `<div class="formula">x₃ = λ² − x₁ − x₂ = ${f2(res.lam)}² − ${f2(Pr[0])} − ${f2(Q[0])} = <strong>${f2(x3)}</strong></div>`
+        + `<div class="formula">y₃ = λ(x₁ − x₃) − y₁ = ${f2(res.lam)}·(${f2(Pr[0])} − ${f2(x3)}) − ${f2(Pr[1])} = <strong>${f2(y3)}</strong></div>`
+        + `<div class="formula big" style="margin-top:8px">${mode === 'add' ? 'P + Q' : '2P'} = <span class="v ok">(${f2(x3)}, ${f2(y3)})</span> ${on ? '✓ on the curve' : ''}</div>`;
+    } else {
+      s += `<line class="chord" x1="${RX(res.vertical)}" y1="0" x2="${RX(res.vertical)}" y2="560"/>`;
+      calc = `<div class="formula big">${mode === 'add' ? 'P + Q' : '2P'} = <span class="v ok">O</span>, the point at infinity</div><p class="why">The line is vertical, so it never meets the curve a third time. We say it meets it "at infinity", at the special point O. O acts like zero: P + O = P. ${mode === 'add' ? 'Here Q is the mirror image of P, so Q = −P.' : 'The tangent at a point on the x-axis is vertical.'}</p>`;
+    }
+  }
+  s += dot(Pr, 'ptP') + lab(Pr, 'P', 'pub');
+  if (mode === 'add') s += dot(Q, 'ptQ') + lab(Q, 'Q', 'priv');
+  s += `<text class="mut" x="12" y="530">y² = x³ ${a < 0 ? '−' : '+'} ${f2(Math.abs(a))}x ${b < 0 ? '−' : '+'} ${f2(Math.abs(b))}</text>`;
+  s += `<text class="mut" x="12" y="548">${Math.abs(disc) < 1e-9 ? 'singular' : disc > 0 ? 'one piece (4a³+27b² > 0)' : 'two pieces (4a³+27b² < 0)'}</text>`;
+  $('rs').innerHTML = s;
+  $('rcalc').innerHTML = calc || '<p class="why" style="margin:0">Pick a smooth curve to add points.</p>';
+  $('rcalc').insertAdjacentHTML('beforeend', `<p class="why">${mode === 'add' ? 'Click the curve to place P, then Q (they alternate).' : 'Click the curve to move P.'}</p>`);
+}
+function svgXY(svg, ev){ const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+$('rs').addEventListener('pointerdown', ev => {
+  const q = svgXY($('rs'), ev), p = snap(q.x / SX + RX0, RY1 - q.y / SY); if (!p) return;
+  if (mode === 'double' || nextPick === 'P'){ Pr = p; if (mode === 'add') nextPick = 'Q'; } else { Qr = p; nextPick = 'P'; }
+  renderReal();
+});
+$('mAdd').onclick = () => { mode = 'add'; $('mAdd').setAttribute('aria-pressed', true); $('mDbl').setAttribute('aria-pressed', false); renderReal(); };
+$('mDbl').onclick = () => { mode = 'double'; $('mDbl').setAttribute('aria-pressed', true); $('mAdd').setAttribute('aria-pressed', false); renderReal(); };
+document.querySelectorAll('button[data-ab]').forEach(btn => btn.onclick = () => { const [a, b] = btn.dataset.ab.split(','); $('ra').value = a; $('rb').value = b; Pr = Qr = null; renderReal(); });
+['ra', 'rb'].forEach(id => $(id).addEventListener('input', renderReal));
+
+/* ---------------- 2. Finite field ---------------- */
+let F = null;   // {p, a, b, pts, N, G, n}
+const isPrime = n => { if (n < 2 || n % 1) return false; for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; };
+const nextPrime = n => { let i = Math.max(2, n + 1); while (!isPrime(i)) i++; return i; };
+const prevPrime = n => { for (let i = n - 1; i >= 5; i--) if (isPrime(i)) return i; return null; };
+const md = (x, p) => ((x % p) + p) % p;
+function inv(x, p){ let [r0, r1, t0, t1] = [p, md(x, p), 0, 1]; while (r1){ const q = Math.floor(r0 / r1); [r0, r1] = [r1, r0 - q * r1]; [t0, t1] = [t1, t0 - q * t1]; } return md(t0, p); }
+const eq = (P, Q) => P === Q || (P && Q && P[0] === Q[0] && P[1] === Q[1]);
+function addF(P, Q){
+  const {p, a} = F;
+  if (!P) return Q; if (!Q) return P;
+  if (P[0] === Q[0] && md(P[1] + Q[1], p) === 0) return null;
+  const lam = eq(P, Q) ? md((3 * P[0] * P[0] + a) * inv(2 * P[1], p), p) : md((Q[1] - P[1]) * inv(Q[0] - P[0], p), p);
+  const x3 = md(lam * lam - P[0] - Q[0], p);
+  return [x3, md(lam * (P[0] - x3) - P[1], p)];
+}
+function mulF(k, P, steps){
+  let R = null, A = P, i = 0;
+  while (k > 0){
+    const bit = k & 1;
+    if (bit) R = addF(R, A);
+    if (steps) steps.push({i, bit, A, R});
+    A = addF(A, A); k = Math.floor(k / 2); i++;
+  }
+  return R;
+}
+function orderOf(P){ let R = P, n = 1; while (R){ R = addF(R, P); n++; if (n > F.N + 1) break; } return n; }
+const ps = P => P ? `(${P[0]}, ${P[1]})` : 'O';
+
+function suggestP(p){
+  const picks = [prevPrime(Math.min(p, 998)), nextPrime(Math.max(p, 4))].filter(v => v && v >= 5 && v <= 997);
+  return `<div class="sugg">Try a prime: ${[...new Set(picks)].map(v => `<button type="button" data-p="${v}">${v}</button>`).join('')}</div>`;
+}
+function buildField(keepG){
+  const p = Math.round(+$('fp').value), a0 = Math.round(+$('fa').value), b0 = Math.round(+$('fb').value);
+  let err = '';
+  if (!Number.isFinite(p) || p < 5 || p > 997) err = `<div>Use a prime between 5 and 997.</div>${suggestP(Number.isFinite(p) ? p : 97)}`;
+  else if (!isPrime(p)) err = `<div><strong>${p} is not prime.</strong> The formulas need division mod p, which only works when p is prime.</div>${suggestP(p)}`;
+  if (err){ F = null; $('fmsg').className = 'msg bad'; $('fmsg').innerHTML = err; clearField(); return; }
+  const a = md(a0, p), b = md(b0, p);
+  if (md(4 * a * a * a + 27 * b * b, p) === 0){
+    F = null; $('fmsg').className = 'msg bad';
+    $('fmsg').innerHTML = `4a³ + 27b² ≡ 0 (mod ${p}), so this curve is singular and not an elliptic curve. <div class="sugg">Try b = <button type="button" data-b="${b + 1}">${b + 1}</button></div>`;
+    clearField(); return;
+  }
+  const roots = new Map();
+  for (let y = 0; y < p; y++){ const s = y * y % p; if (!roots.has(s)) roots.set(s, []); roots.get(s).push(y); }
+  const pts = [];
+  for (let x = 0; x < p; x++){ const r = md(x * x * x + a * x + b, p); for (const y of roots.get(r) || []) pts.push([x, y]); }
+  const oldG = keepG && F && F.p === p && F.a === a && F.b === b ? F.G : null;
+  F = {p, a, b, pts, N: pts.length + 1};
+  let G = oldG, n = oldG ? orderOf(oldG) : 0;
+  if (!G){ for (const P of pts){ if (P[1] === 0) continue; const o = orderOf(P); if (o > n){ n = o; G = P; } if (n === F.N) break; } }
+  F.G = G; F.n = n;
+  $('fmsg').className = 'msg ok';
+  $('fmsg').textContent = `y² = x³ + ${a}x + ${b} (mod ${p}) has ${F.N} points (counting O). G = ${ps(G)} has order n = ${n}: G, 2G, … , ${n}G = O.`;
+  $('fk').max = Math.max(1, n); if (+$('fk').value > n) $('fk').value = Math.min(5, n);
+  renderField(); renderDH();
+}
+function clearField(){ ['fs', 'ds', 'fkres', 'fstats', 'kA', 'kB', 'kSA', 'kSB', 'dtable', 'alog', 'ares'].forEach(id => $(id).innerHTML = ''); $('dmatch').className = 'msg'; $('dmatch').textContent = ''; $('dmsg').textContent = ''; }
+function fieldSvg(marks, hops){
+  const {p, pts} = F, M = 40, Wd = 560 - 2 * M, c = Wd / Math.max(p - 1, 1);
+  const X = x => M + x * c, Y = y => 560 - M - y * c, r = Math.max(1.8, Math.min(6, 150 / p));
+  let s = `<rect x="${M - 6}" y="${M - 6}" width="${Wd + 12}" height="${Wd + 12}" fill="none" class="grid" rx="6"/>`;
+  s += `<text class="mut" x="${M}" y="${560 - 12}">0</text><text class="mut" x="${560 - M}" y="${560 - 12}" text-anchor="end">x → ${p - 1}</text><text class="mut" x="12" y="${M + 4}">${p - 1}</text>`;
+  if (hops && hops.length > 1) s += `<path class="hop" d="${hops.map((P, i) => (i ? 'L' : 'M') + X(P[0]) + ',' + Y(P[1])).join('')}"/>`;
+  s += pts.map((P, i) => `<circle class="fp" data-i="${i}" cx="${X(P[0])}" cy="${Y(P[1])}" r="${r}"/>`).join('');
+  for (const [P, cls, t] of marks) if (P) s += `<circle class="mark ${cls}" cx="${X(P[0])}" cy="${Y(P[1])}" r="${r + 4}"/><text class="lab ${{mG: '', mA: 'pub', mB: 'priv', mS: 'okc', mK: 'vio'}[cls]}" x="${X(P[0]) + r + 6}" y="${Y(P[1]) - r - 4}">${t}</text>`;
+  return s;
+}
+function renderField(){
+  if (!F) return;
+  const k = +$('fk').value; $('fko').textContent = k;
+  const hops = []; let R = null;
+  for (let i = 1; i <= k; i++){ R = addF(R, F.G); if (R) hops.push(R); }
+  const kG = mulF(k, F.G);
+  $('fs').innerHTML = fieldSvg([[F.G, 'mG', 'G'], [kG, 'mK', k === 1 ? '' : k + 'G']], hops);
+  $('fkres').innerHTML = `${k}·G = <span class="v vio">${ps(kG)}</span>${kG ? '' : ' (the point at infinity, so the cycle starts again)'}`;
+  const hb = 2 * Math.sqrt(F.p);
+  $('fstats').innerHTML = [
+    ['Curve', `y² = x³ + ${F.a}x + ${F.b}`, `mod ${F.p}`],
+    ['Points #E', F.N, 'including O'],
+    ['Hasse bound', `|${F.N} − ${F.p + 1}| = ${Math.abs(F.N - F.p - 1)}`, `≤ 2√p = ${hb.toFixed(1)} ✓`],
+    ['Base point G', ps(F.G), 'click a dot to change'],
+    ['Order n of G', F.n, F.n === F.N ? 'G generates every point' : `n divides #E (${F.N})`],
+  ].map(([k, n, fm]) => `<div class="stat"><div class="k">${k}</div><div class="n">${n}</div><div class="f">${fm}</div></div>`).join('');
+}
+$('fs').addEventListener('click', ev => {
+  const c = ev.target.closest('circle.fp'); if (!c || !F) return;
+  const P = F.pts[+c.dataset.i];
+  if (P[1] === 0){ $('fmsg').className = 'msg info'; $('fmsg').textContent = `${ps(P)} has y = 0, so 2·P = O. Its order is only 2. Pick another point.`; return; }
+  F.G = P; F.n = orderOf(P); $('fk').max = F.n; if (+$('fk').value > F.n) $('fk').value = 1;
+  $('fmsg').className = 'msg ok'; $('fmsg').textContent = `New base point G = ${ps(P)} with order n = ${F.n}.`;
+  renderField(); renderDH();
+});
+$('fmsg').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.p) $('fp').value = b.dataset.p; if (b.dataset.b) $('fb').value = b.dataset.b; buildField(false);
+});
+document.querySelectorAll('button[data-fab]').forEach(btn => btn.onclick = () => { const [p, a, b] = btn.dataset.fab.split(','); $('fp').value = p; $('fa').value = a; $('fb').value = b; buildField(false); });
+['fp', 'fa', 'fb'].forEach(id => $(id).addEventListener('input', () => buildField(true)));
+$('fk').addEventListener('input', renderField);
+
+/* ---------------- 3. ECDH ---------------- */
+let atkToken = 0;
+function renderDH(){
+  atkToken++; $('alog').textContent = ''; $('ares').innerHTML = '';
+  if (!F) return;
+  const n = F.n; let al = Math.round(+$('da').value), be = Math.round(+$('db').value), err = '';
+  if (!(al >= 1 && al < n) || !(be >= 1 && be < n)) err = `Secrets must be whole numbers from 1 to n − 1 = ${n - 1}.`;
+  $('dmsg').className = err ? 'msg bad' : 'msg'; $('dmsg').textContent = err;
+  if (err){ ['kA', 'kB', 'kSA', 'kSB', 'dtable'].forEach(id => $(id).innerHTML = '—'); $('dmatch').className = 'msg'; $('dmatch').textContent = ''; $('ds').innerHTML = fieldSvg([[F.G, 'mG', 'G']]); return; }
+  const steps = [], A = mulF(al, F.G, steps), B = mulF(be, F.G), SA = mulF(al, B), SB = mulF(be, A);
+  $('kA').textContent = ps(A); $('kB').textContent = ps(B); $('kSA').textContent = ps(SA); $('kSB').textContent = ps(SB);
+  $('sa').textContent = al; $('sb').textContent = be;
+  const ok = eq(SA, SB);
+  $('dmatch').className = 'msg ' + (ok ? 'ok' : 'bad');
+  $('dmatch').innerHTML = ok ? `<strong>Same point!</strong> α·(β·G) = β·(α·G) = (α·β)·G = ${ps(SA)}. Alice and Bob now share a secret that was never sent.` : 'Mismatch: something went wrong.';
+  $('ds').innerHTML = fieldSvg([[F.G, 'mG', 'G'], [A, 'mA', 'A'], [B, 'mB', 'B'], [SA, 'mS', 'shared']]);
+  $('dtable').innerHTML = `<tr><th>Bit #</th><th>Bit of α</th><th>Current doubling 2ⁱ·G</th><th>Running total</th></tr>` +
+    steps.map(r => `<tr><td>${r.i}</td><td>${r.bit}</td><td>${ps(r.A)}</td><td>${r.bit ? '<strong>' + ps(r.R) + '</strong>' : ps(r.R)}</td></tr>`).join('') +
+    `<tr><td colspan="4" style="text-align:left;font-family:var(--sans)">α = ${al} = ${al.toString(2)}₂, so A = ${ps(A)} after ${steps.length} doublings instead of ${al - 1} additions.</td></tr>`;
+}
+['da', 'db'].forEach(id => $(id).addEventListener('input', renderDH));
+$('drand').onclick = () => { if (!F) return; const r = () => 2 + Math.floor(Math.random() * (F.n - 3)); $('da').value = r(); $('db').value = r(); renderDH(); };
+
+/* ---------------- 4. Attacker ---------------- */
+$('atk').onclick = async () => {
+  if (!F || $('dmsg').textContent){ $('alog').textContent = 'Set up a valid curve and secrets first.'; return; }
+  const token = ++atkToken, al = Math.round(+$('da').value), A = mulF(al, F.G), B = mulF(Math.round(+$('db').value), F.G);
+  $('ares').innerHTML = '';
+  let R = null, k = 0;
+  while (true){
+    k++; R = addF(R, F.G);
+    if (eq(R, A)) break;
+    if (!reduce && k % Math.max(1, Math.ceil(F.n / 60)) === 0){
+      $('alog').textContent = `Trying k = ${k}: k·G = ${ps(R)} … not A`;
+      await new Promise(r => requestAnimationFrame(r)); if (token !== atkToken) return;
+    }
+  }
+  const S = mulF(k, B);
+  $('alog').textContent = `Found it after ${k} tries: ${k}·G = A = ${ps(A)}, so α = ${k}.`;
+  $('ares').innerHTML = `<div class="formula">Shared secret = α·B = ${k}·${ps(B)} = <span class="v ok">${ps(S)}</span></div>
+    <div class="msg bad"><strong>Secret stolen.</strong> On a toy curve with only ${F.n} multiples of G, Eve tries them all in a blink.</div>
+    <p class="why">On a real curve such as secp256k1 (Bitcoin) or P-256 (HTTPS), G has about 1.16 × 10⁷⁷ multiples. The best known attack, Pollard's rho, still needs about 2¹²⁸ ≈ 3.4 × 10³⁸ point additions. Even a billion computers doing a billion additions a second would need about 10¹³ years, nearly 800 times the age of the universe.</p>`;
+};
+
+renderReal(); buildField(false);
+</script>
+</body>
+</html>
