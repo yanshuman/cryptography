@@ -272,7 +272,7 @@ This is the most common mix-up in this subject:
 3. Weierstrass showed that elliptic functions satisfy an equation of the form y² = 4x³ − g₂x − g₃, which is a cubic curve.
 4. These cubic curves were then called **elliptic curves**: the curves that elliptic functions live on.
 
-So the ellipse is the grandparent of the elliptic curve. In cryptography, points on an elliptic curve are added using a chord-and-tangent rule. Repeating that addition is fast, but undoing it (the *elliptic-curve discrete logarithm problem*) is believed to be extremely hard. That plays the same role as factoring does for [RSA](../../rsa/README.md), but with much smaller keys: a 256-bit ECC key gives about the same security as a 3072-bit RSA key.
+So the ellipse is the grandparent of the elliptic curve. In cryptography, points on an elliptic curve are added using a chord-and-tangent rule. Repeating that addition is fast, but undoing it (the *elliptic-curve discrete logarithm problem*) is believed to be extremely hard. That one-way property is what keeps ECC keys safe, and it holds even with short keys: a 256-bit ECC key is considered strong enough for modern security.
 
 ## 12. Where ellipses are used
 
