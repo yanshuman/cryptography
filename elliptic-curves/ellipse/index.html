@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ellipse Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --ink:#16203A; --muted:#56617C; --line:#D3DAE7; --grid:#E3E8F0;
+  --pub:#2747C9; --pub-soft:#E3E9FB; --priv:#9A6200; --priv-soft:#FBEFD6;
+  --ok:#1C7A50; --ok-soft:#DCF2E6; --bad:#B23A26; --bad-soft:#F9E1DC; --vio:#6A3FC9; --vio-soft:#EEE8FB;
+  --sans:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+    --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+    --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+  --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+  --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:40px 16px 80px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-0.02em}
+header p{margin:0;color:var(--muted);max-width:62ch}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+nav.toc a{font-size:.88rem;font-weight:700;padding:5px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+nav.toc a:hover{border-color:var(--ink)}
+.phase{font-size:1.4rem;font-weight:800;margin:56px 0 6px;scroll-margin-top:16px}
+.phase-note{color:var(--muted);margin:0 0 16px;max-width:66ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 20px;margin-bottom:12px}
+.ctl label{display:flex;justify-content:space-between;font-size:.88rem;font-weight:700;margin-bottom:2px}
+.ctl label output{font-family:var(--mono);font-weight:600;color:var(--pub)}
+input[type=range]{width:100%;accent-color:var(--pub)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toggles{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem;margin:4px 0 10px}
+.toggles label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+button{font-family:var(--sans);font-size:.9rem;font-weight:700;padding:7px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--pub);outline-offset:2px}
+.stage{width:100%;height:auto;display:block;background:var(--bg);border-radius:12px;touch-action:none}
+.stage .grid{stroke:var(--grid);stroke-width:1}
+.stage .axis{stroke:var(--line);stroke-width:1.5}
+.stage .curve{fill:none;stroke:var(--ink);stroke-width:2.5}
+.stage .ghost{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 5}
+.stage .r1{stroke:var(--pub);stroke-width:2.5} .stage .r2{stroke:var(--priv);stroke-width:2.5}
+.stage .tri{stroke:var(--ok);stroke-width:2;fill:var(--ok-soft);fill-opacity:.55}
+.stage .dir{stroke:var(--bad);stroke-width:1.5;stroke-dasharray:7 5}
+.stage .aux{fill:none;stroke:var(--vio);stroke-width:1.3;stroke-dasharray:4 4}
+.stage .tan{stroke:var(--vio);stroke-width:2} .stage .nor{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}
+.stage .osc{fill:none;stroke:var(--ok);stroke-width:1.5}
+.stage .focus{fill:var(--bad)} .stage .pt{fill:var(--ink)} .stage .center{fill:var(--muted)}
+.stage text{font-family:var(--sans);font-size:15px;font-weight:700;fill:var(--ink)}
+.stage text.m{font-family:var(--mono);font-size:13px;font-weight:600}
+.stage text.pub{fill:var(--pub)} .stage text.priv{fill:var(--priv)} .stage text.okc{fill:var(--ok)} .stage text.bad{fill:var(--bad)} .stage text.vio{fill:var(--vio)} .stage text.mut{fill:var(--muted);font-weight:500}
+.stage .ray{fill:none;stroke:var(--pub);stroke-width:1.4;stroke-opacity:.8;stroke-dasharray:1;stroke-dashoffset:1}
+.stage .ray.go{transition:stroke-dashoffset 2.6s linear;stroke-dashoffset:0}
+.stage .string{fill:none;stroke:var(--priv);stroke-width:2}
+.stage .trace{fill:none;stroke:var(--pub);stroke-width:3;stroke-linecap:round}
+.stage .pin{fill:var(--surface);stroke:var(--bad);stroke-width:3}
+.stage .sector{stroke:var(--surface);stroke-width:1}
+.stage .s0{fill:var(--pub-soft)} .stage .s1{fill:var(--priv-soft)}
+.stage .sun{fill:var(--priv)} .stage .planet{fill:var(--pub)}
+.stage .src{fill:var(--bad);cursor:grab}
+.big{font-family:var(--mono);font-size:1.1rem;font-weight:600;margin:12px 0 4px;overflow-x:auto;white-space:nowrap}
+.v{padding:1px 7px;border-radius:6px;font-weight:600}
+.v.pub{background:var(--pub-soft);color:var(--pub)} .v.priv{background:var(--priv-soft);color:var(--priv)} .v.ok{background:var(--ok-soft);color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.stat.wide{grid-column:span 2}
+.stat .k{font-size:.8rem;font-weight:700;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-size:1.08rem;font-weight:600}
+.stat .f{font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+.msg{margin-top:10px;padding:8px 12px;border-radius:10px;font-size:.93rem}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.bad{background:var(--bad-soft);color:var(--bad)}
+.why{color:var(--muted);font-size:.95rem;margin:10px 0 0;max-width:70ch}
+.bar{height:10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;background:var(--pub);width:0}
+footer{margin-top:60px;color:var(--muted);font-size:.92rem}
+footer a{color:var(--pub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The ellipse, hands on</h1>
+    <p>An ellipse is every point whose distances to two fixed points add up to the same number. Move the sliders and watch that one rule explain the shape, the reflections, and the orbits of planets.</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#explore">1 · Explore</a><a href="#string">2 · Draw with a string</a><a href="#reflect">3 · Reflection</a><a href="#orbit">4 · Kepler orbits</a>
+    </nav>
+  </header>
+
+  <!-- 1. Explorer -->
+  <h2 class="phase" id="explore">1 · Explore the shape</h2>
+  <p class="phase-note">a is the semi-major axis, b the semi-minor axis. The foci F₁ and F₂ sit at distance c from the centre, where c² = a² − b². Move P around the curve: r₁ + r₂ never changes.</p>
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl"><label for="a">Semi-major axis a <output id="ao"></output></label><input type="range" id="a" min="2" max="10" step="0.1" value="9"></div>
+      <div class="ctl"><label for="b">Semi-minor axis b <output id="bo"></output></label><input type="range" id="b" min="0.5" max="7" step="0.1" value="5.4"></div>
+      <div class="ctl"><label for="t">Point P, angle t <output id="to"></output></label><input type="range" id="t" min="0" max="360" step="1" value="58"></div>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <button class="primary" id="spin">▶ Move P</button>
+      <button data-e="0">Circle (e = 0)</button>
+      <button data-e="0.6">Medium (e = 0.6)</button>
+      <button data-e="0.95">Flat (e = 0.95)</button>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="oTri" checked> a² = b² + c² triangle</label>
+      <label><input type="checkbox" id="oDir"> Directrices</label>
+      <label><input type="checkbox" id="oAux"> Auxiliary circle</label>
+      <label><input type="checkbox" id="oTan"> Tangent &amp; normal</label>
+      <label><input type="checkbox" id="oOsc"> Curvature circle</label>
+    </div>
+    <svg class="stage" id="ex" viewBox="0 0 800 520" role="img" aria-label="Interactive ellipse"></svg>
+    <div class="big" id="sum"></div>
+    <div class="stats" id="stats"></div>
+    <p class="why" id="exwhy"></p>
+  </div>
+
+  <!-- 2. String construction -->
+  <h2 class="phase" id="string">2 · Draw it with a string</h2>
+  <p class="phase-note">The gardener's method: push two pins in at the foci, tie a loop of string around them, pull it tight with a pencil and go round. Because the string length is fixed, the pencil can only move along the ellipse. It uses the same a and b as above.</p>
+  <div class="panel">
+    <div class="row" style="margin-bottom:10px"><button class="primary" id="draw">▶ Draw</button><button id="drawReset">Reset</button></div>
+    <svg class="stage" id="gs" viewBox="0 0 800 520" role="img" aria-label="String construction of an ellipse"></svg>
+    <div class="big" id="gsum"></div>
+  </div>
+
+  <!-- 3. Reflection -->
+  <h2 class="phase" id="reflect">3 · The reflection property</h2>
+  <p class="phase-note">Every ray leaving one focus bounces off the ellipse straight through the other focus. That is how whispering galleries and kidney-stone lithotripters work. Drag the red source away from the focus to see the effect break.</p>
+  <div class="panel">
+    <div class="row" style="margin-bottom:10px"><button class="primary" id="fire">▶ Fire rays</button><button id="snap">Put source on F₁</button>
+      <label class="row" style="gap:6px;font-size:.9rem;font-weight:700">Rays <input type="range" id="nrays" min="8" max="72" step="4" value="36" style="width:120px"></label></div>
+    <svg class="stage" id="rf" viewBox="0 0 800 520" role="img" aria-label="Rays reflecting inside an ellipse"></svg>
+    <div class="msg" id="rfmsg"></div>
+  </div>
+
+  <!-- 4. Kepler -->
+  <h2 class="phase" id="orbit">4 · Kepler orbits</h2>
+  <p class="phase-note">Planets move on ellipses with the Sun at one focus (Kepler's 1st law). The line from the Sun sweeps equal areas in equal times (2nd law). Each coloured slice below takes the same time, so the planet races near the Sun and crawls far away.</p>
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl"><label for="ke">Eccentricity e <output id="keo"></output></label><input type="range" id="ke" min="0" max="0.97" step="0.001" value="0.6"></div>
+      <div class="ctl"><label for="ks">Speed <output id="kso"></output></label><input type="range" id="ks" min="0.25" max="3" step="0.25" value="1"></div>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <button class="primary" id="kplay">▶ Play</button>
+      <button data-k="0.0167">Earth</button><button data-k="0.0934">Mars</button><button data-k="0.2056">Mercury</button>
+      <button data-k="0.2488">Pluto</button><button data-k="0.967">Halley's comet</button>
+    </div>
+    <div class="toggles"><label><input type="checkbox" id="kSec" checked> Equal-time slices</label></div>
+    <svg class="stage" id="kp" viewBox="0 0 800 520" role="img" aria-label="Planet orbiting the Sun on an ellipse"></svg>
+    <div class="stats" id="kstats"></div>
+    <div class="why">Current speed (relative to a circular orbit)</div>
+    <div class="bar"><i id="kbar"></i></div>
+  </div>
+
+  <footer>
+    <p>An <strong>ellipse</strong> is not an <strong>elliptic curve</strong>. Elliptic curves (y² = x³ + ax + b), the basis of modern elliptic-curve cryptography, got their name because they first appeared while mathematicians tried to measure the perimeter of an ellipse. See the <a href="README.md">ellipse guide</a> for the full story.</p>
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = 36, OX = 400, OY = 260;               // pixels per unit, screen origin
+const X = x => OX + x * S, Y = y => OY - y * S;
+const f = (n, d = 2) => Number(n).toFixed(d);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function gridSvg(){
+  let s = '';
+  for (let i = -11; i <= 11; i++) s += `<line class="grid" x1="${X(i)}" y1="0" x2="${X(i)}" y2="520"/>`;
+  for (let j = -7; j <= 7; j++) s += `<line class="grid" x1="0" y1="${Y(j)}" x2="800" y2="${Y(j)}"/>`;
+  return s + `<line class="axis" x1="0" y1="${OY}" x2="800" y2="${OY}"/><line class="axis" x1="${OX}" y1="0" x2="${OX}" y2="520"/>`;
+}
+const GRID = gridSvg();
+const dot = (x, y, r, cls) => `<circle class="${cls}" cx="${X(x)}" cy="${Y(y)}" r="${r}"/>`;
+const line = (x1, y1, x2, y2, cls) => `<line class="${cls}" x1="${X(x1)}" y1="${Y(y1)}" x2="${X(x2)}" y2="${Y(y2)}"/>`;
+const label = (x, y, t, cls = '', dx = 0, dy = 0, anchor = 'middle') => `<text class="${cls}" x="${X(x) + dx}" y="${Y(y) + dy}" text-anchor="${anchor}">${t}</text>`;
+const ell = (a, b, cls, cx = 0) => `<ellipse class="${cls}" cx="${X(cx)}" cy="${OY}" rx="${a * S}" ry="${b * S}"/>`;
+
+// ---------- shared shape state ----------
+function shape(){
+  const a = +$('a').value;
+  const b = Math.min(+$('b').value, a);
+  const c = Math.sqrt(Math.max(a * a - b * b, 0));
+  return {a, b, c, e: c / a};
+}
+function perimeter(a, b){                        // Simpson's rule on 4∫√(a²sin²t + b²cos²t) dt
+  const n = 2000, h = (Math.PI / 2) / n, g = t => Math.sqrt(a * a * Math.sin(t) ** 2 + b * b * Math.cos(t) ** 2);
+  let s = g(0) + g(Math.PI / 2);
+  for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * g(i * h);
+  return 4 * s * h / 3;
+}
+function ramanujan2(a, b){
+  const h = ((a - b) / (a + b)) ** 2;
+  return Math.PI * (a + b) * (1 + 3 * h / (10 + Math.sqrt(4 - 3 * h)));
+}
+
+// ---------- 1. Explorer ----------
+function renderExplorer(){
+  const {a, b, c, e} = shape();
+  if (+$('b').value > a) $('b').value = a;
+  $('ao').textContent = f(a, 1); $('bo').textContent = f(b, 1); $('to').textContent = $('t').value + '°';
+  const t = +$('t').value * Math.PI / 180, ct = Math.cos(t), st = Math.sin(t);
+  const px = a * ct, py = b * st;
+  const r1 = a + e * px, r2 = a - e * px;
+  let s = GRID;
+  if ($('oAux').checked){
+    s += `<circle class="aux" cx="${OX}" cy="${OY}" r="${a * S}"/>` + line(px, a * st, px, py, 'aux') + dot(px, a * st, 4, 'pt') + label(px, a * st, 'Q', 'vio', 10, -8, 'start')
+       + line(0, 0, px, a * st, 'aux');
+  }
+  if ($('oDir').checked && e > 0.01){
+    const d = a / e;
+    for (const sx of [-1, 1]) if (d * S < 400) s += line(sx * d, -7, sx * d, 7, 'dir') + label(sx * d, 6.4, 'directrix', 'bad', sx * -6, 0, sx > 0 ? 'end' : 'start');
+  }
+  s += ell(a, b, 'curve');
+  if ($('oTri').checked && c > 0.05){
+    s += `<path class="tri" d="M${X(0)},${Y(0)} L${X(c)},${Y(0)} L${X(0)},${Y(b)} Z"/>`
+       + label(c / 2, 0, 'c', 'okc', 0, 18) + label(0, b / 2, 'b', 'okc', -12, 5) + label(c / 2, b / 2, 'a', 'okc', 12, -6);
+  }
+  if ($('oOsc').checked){
+    const k = a * b / (a * a * st * st + b * b * ct * ct) ** 1.5, R = 1 / k;
+    const cx = (a * a - b * b) / a * ct ** 3, cy = (b * b - a * a) / b * st ** 3;
+    if (R * S < 3000) s += `<circle class="osc" cx="${X(cx)}" cy="${Y(cy)}" r="${R * S}"/>` + dot(cx, cy, 3, 'center');
+  }
+  if ($('oTan').checked){
+    let tx = -a * st, ty = b * ct; const tl = Math.hypot(tx, ty); tx /= tl; ty /= tl;
+    let nx = b * ct, ny = a * st; const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    s += line(px - 5 * tx, py - 5 * ty, px + 5 * tx, py + 5 * ty, 'tan') + line(px - 2.5 * nx, py - 2.5 * ny, px + 1.5 * nx, py + 1.5 * ny, 'nor');
+  }
+  s += line(-c, 0, px, py, 'r1') + line(c, 0, px, py, 'r2')
+     + label((px - c) / 2, py / 2, 'r₁', 'pub', -10, -6) + label((px + c) / 2, py / 2, 'r₂', 'priv', 10, -6)
+     + dot(0, 0, 4, 'center') + dot(-c, 0, 6, 'focus') + dot(c, 0, 6, 'focus')
+     + label(-c, 0, 'F₁', 'bad', 0, 24) + label(c, 0, 'F₂', 'bad', 0, 24)
+     + label(-a, 0, 'V₁', 'mut', -14, -8) + label(a, 0, 'V₂', 'mut', 14, -8)
+     + dot(px, py, 7, 'pt') + label(px, py, 'P', '', px >= 0 ? 14 : -14, py >= 0 ? -10 : 22);
+  $('ex').innerHTML = s;
+
+  $('sum').innerHTML = `r₁ + r₂ = <span class="v pub">${f(r1)}</span> + <span class="v priv">${f(r2)}</span> = <span class="v ok">${f(r1 + r2)}</span> = 2a`;
+  const P = perimeter(a, b), R2 = ramanujan2(a, b);
+  const stats = [
+    ['Equation', `x²/${+(a * a).toFixed(2)} + y²/${+(b * b).toFixed(2)} = 1`, 'x²/a² + y²/b² = 1'],
+    ['Focal distance c', f(c, 3), 'c = √(a² − b²)'],
+    ['Eccentricity e', f(e, 4), 'e = c / a  (0 = circle)'],
+    ['Area', f(Math.PI * a * b, 3), 'A = π a b'],
+    ['Perimeter (exact)', f(P, 4), '4a·E(e), numerical'],
+    ['Ramanujan II', f(R2, 4), `error ${(Math.abs(R2 - P) / P * 100).toExponential(1)} %`],
+    ['Semi-latus rectum', f(b * b / a, 3), 'ℓ = b² / a'],
+    ['Directrices', e > 0.001 ? `x = ±${f(a / e, 2)}` : 'at infinity', 'x = ±a / e'],
+  ];
+  $('stats').innerHTML = stats.map(([k, n, fm], i) => `<div class="stat${i ? '' : ' wide'}"><div class="k">${k}</div><div class="n">${n}</div><div class="f">${fm}</div></div>`).join('');
+  const notes = [];
+  if (e < 0.001) notes.push('With b = a the two foci merge at the centre, so the ellipse becomes a circle.');
+  if ($('oDir').checked) notes.push(`Directrix rule: distance to F₂ ÷ distance to the right directrix = e = ${f(e, 3)} for every point.`);
+  if ($('oAux').checked) notes.push('Squash the auxiliary circle vertically by b/a and Q lands on P. That is why the area is πab: a circle of area πa², scaled by b/a.');
+  if ($('oOsc').checked) notes.push('The green circle best matches the curve at P. It is smallest at the ends of the major axis (radius b²/a) and largest at the ends of the minor axis (radius a²/b).');
+  if ($('oTan').checked) notes.push('The tangent makes equal angles with r₁ and r₂. That single fact is the reflection property in section 3.');
+  $('exwhy').textContent = notes.join(' ');
+}
+let spinning = false;
+$('spin').onclick = () => {
+  spinning = !spinning; $('spin').textContent = spinning ? '❚❚ Pause' : '▶ Move P';
+  const step = () => { if (!spinning) return; $('t').value = (+$('t').value + 1) % 360; renderExplorer(); requestAnimationFrame(step); };
+  step();
+};
+document.querySelectorAll('button[data-e]').forEach(btn => btn.onclick = () => {
+  const a = +$('a').value, e = +btn.dataset.e;
+  $('b').value = Math.min(7, a * Math.sqrt(1 - e * e)); shapeChanged();
+});
+['t', 'oTri', 'oDir', 'oAux', 'oTan', 'oOsc'].forEach(id => $(id).addEventListener('input', renderExplorer));
+const shapeChanged = () => { renderExplorer(); renderString(); renderReflect(true); };
+['a', 'b'].forEach(id => $(id).addEventListener('input', shapeChanged));
+
+// ---------- 2. String construction ----------
+let drawT = 0, drawing = false;
+function renderString(){
+  const {a, b, c} = shape();
+  const t = drawT, px = a * Math.cos(t), py = b * Math.sin(t);
+  let trace = '';
+  const n = Math.max(2, Math.ceil(t / (Math.PI / 180)));
+  for (let i = 0; i <= n; i++){ const u = t * i / n; trace += (i ? 'L' : 'M') + X(a * Math.cos(u)) + ',' + Y(b * Math.sin(u)); }
+  $('gs').innerHTML = GRID + ell(a, b, 'ghost') + (t > 0 ? `<path class="trace" d="${trace}"/>` : '')
+    + `<path class="string" d="M${X(-c)},${Y(0)} L${X(px)},${Y(py)} L${X(c)},${Y(0)}"/>`
+    + `<circle class="pin" cx="${X(-c)}" cy="${OY}" r="7"/><circle class="pin" cx="${X(c)}" cy="${OY}" r="7"/>`
+    + label(-c, 0, 'pin F₁', 'bad', 0, 28) + label(c, 0, 'pin F₂', 'bad', 0, 28)
+    + dot(px, py, 8, 'pt') + label(px, py, '✎', '', 14, -12);
+  const r1 = Math.hypot(px + c, py), r2 = Math.hypot(px - c, py);
+  $('gsum').innerHTML = `string = r₁ + r₂ = ${f(r1)} + ${f(r2)} = <span class="v ok">${f(r1 + r2)}</span> = 2a, always`;
+}
+$('draw').onclick = () => {
+  if (drawing) return; drawing = true; drawT = 0;
+  const start = performance.now(), dur = reduce ? 1 : 4500;
+  const step = now => { drawT = Math.min(1, (now - start) / dur) * 2 * Math.PI; renderString(); if (drawT < 2 * Math.PI) requestAnimationFrame(step); else drawing = false; };
+  requestAnimationFrame(step);
+};
+$('drawReset').onclick = () => { drawing = false; drawT = 0; renderString(); };
+
+// ---------- 3. Reflection ----------
+let src = null;   // null = sits on F1
+function hit(px, py, dx, dy, a, b){
+  const A = dx * dx / (a * a) + dy * dy / (b * b), B = 2 * (px * dx / (a * a) + py * dy / (b * b)), C = px * px / (a * a) + py * py / (b * b) - 1;
+  const t = (-B + Math.sqrt(Math.max(B * B - 4 * A * C, 0))) / (2 * A);
+  return [px + t * dx, py + t * dy];
+}
+function bounce(hx, hy, dx, dy, a, b){
+  let nx = hx / (a * a), ny = hy / (b * b); const l = Math.hypot(nx, ny); nx /= l; ny /= l;
+  const k = dx * nx + dy * ny; return [dx - 2 * k * nx, dy - 2 * k * ny];
+}
+function renderReflect(fire){
+  const {a, b, c} = shape();
+  let [sx, sy] = src || [-c, 0];
+  if (sx * sx / (a * a) + sy * sy / (b * b) > 0.92){ src = null; [sx, sy] = [-c, 0]; }
+  const N = +$('nrays').value;
+  let rays = '';
+  if (fire){
+    for (let i = 0; i < N; i++){
+      const th = (i + 0.5) / N * 2 * Math.PI; let dx = Math.cos(th), dy = Math.sin(th);
+      const [h1x, h1y] = hit(sx, sy, dx, dy, a, b); [dx, dy] = bounce(h1x, h1y, dx, dy, a, b);
+      const [h2x, h2y] = hit(h1x + dx * 1e-6, h1y + dy * 1e-6, dx, dy, a, b);
+      rays += `<path class="ray" pathLength="1" d="M${X(sx)},${Y(sy)} L${X(h1x)},${Y(h1y)} L${X(h2x)},${Y(h2y)}"/>`;
+    }
+  }
+  $('rf').innerHTML = GRID + rays + ell(a, b, 'curve')
+    + dot(-c, 0, 5, 'center') + dot(c, 0, 9, 'focus') + label(-c, 0, 'F₁', 'mut', 0, 24) + label(c, 0, 'F₂', 'bad', 0, 26)
+    + `<circle class="src" id="srcdot" cx="${X(sx)}" cy="${Y(sy)}" r="9"/>` + label(sx, sy, 'source', 'bad', 0, -14);
+  if (fire && !reduce) requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#rf .ray').forEach(r => r.classList.add('go'))));
+  else document.querySelectorAll('#rf .ray').forEach(r => r.style.strokeDashoffset = 0);
+  const onFocus = Math.hypot(sx + c, sy) < 0.12 || Math.hypot(sx - c, sy) < 0.12;
+  $('rfmsg').className = 'msg ' + (onFocus ? 'ok' : 'bad');
+  $('rfmsg').textContent = onFocus
+    ? 'The source is on a focus: after one bounce, every ray passes through the other focus.'
+    : 'The source is off the focus: the reflected rays no longer meet at one point. Press "Put source on F₁" to fix it.';
+}
+function svgPoint(svg, ev){
+  const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse()); return [(q.x - OX) / S, (OY - q.y) / S];
+}
+let dragging = false;
+$('rf').addEventListener('pointerdown', ev => { dragging = true; $('rf').setPointerCapture(ev.pointerId); moveSrc(ev); });
+$('rf').addEventListener('pointermove', ev => { if (dragging) moveSrc(ev); });
+$('rf').addEventListener('pointerup', () => { dragging = false; renderReflect(true); });
+function moveSrc(ev){
+  const {a, b, c} = shape(); let [x, y] = svgPoint($('rf'), ev);
+  if (x * x / (a * a) + y * y / (b * b) > 0.9) return;
+  for (const fx of [-c, c]) if (Math.hypot(x - fx, y) < 0.3){ x = fx; y = 0; }   // snap to a focus
+  src = [x, y]; renderReflect(false);
+}
+$('fire').onclick = () => renderReflect(true);
+$('snap').onclick = () => { src = null; renderReflect(true); };
+$('nrays').addEventListener('input', () => renderReflect(true));
+
+// ---------- 4. Kepler ----------
+let kM = 0, kPlaying = false, kLast = 0;
+function kGeom(){
+  const e = +$('ke').value, A = Math.min(9.5, 6.6 / Math.sqrt(1 - e * e));   // a in units, scaled to fit
+  return {e, A, B: A * Math.sqrt(1 - e * e), C: A * e};
+}
+function solveKepler(M, e){ let E = e < 0.8 ? M : Math.PI; for (let i = 0; i < 30; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); return E; }
+function orbitPt(M, g){ const E = solveKepler(M, g.e); return [g.A * Math.cos(E), g.B * Math.sin(E)]; }   // centre-based, M = 0 at perihelion
+function renderKepler(){
+  const g = kGeom(), sunX = g.C;     // Sun at the right focus
+  $('keo').textContent = f(g.e, 3); $('kso').textContent = $('ks').value + '×';
+  let s = GRID;
+  if ($('kSec').checked){
+    const N = 12;
+    for (let k = 0; k < N; k++){
+      let d = `M${X(sunX)},${Y(0)}`;
+      for (let j = 0; j <= 24; j++){ const [x, y] = orbitPt(2 * Math.PI * (k + j / 24) / N, g); d += ` L${X(x)},${Y(y)}`; }
+      s += `<path class="sector s${k % 2}" d="${d} Z"/>`;
+    }
+  }
+  s += ell(g.A, g.B, 'curve') + dot(-g.C, 0, 4, 'center') + label(-g.C, 0, 'empty focus', 'mut', 0, 22);
+  const [PX, PY] = orbitPt(kM, g);
+  s += line(sunX, 0, PX, PY, 'r2') + `<circle class="sun" cx="${X(sunX)}" cy="${OY}" r="14"/>` + label(sunX, 0, 'Sun', 'priv', 0, 32)
+     + `<circle class="planet" cx="${X(PX)}" cy="${Y(PY)}" r="9"/>`
+     + label(g.A, 0, 'perihelion', 'mut', -8, -10, 'end') + label(-g.A, 0, 'aphelion', 'mut', 8, -10, 'start');
+  $('kp').innerHTML = s;
+  const r = Math.hypot(PX - sunX, PY) / g.A, v = Math.sqrt(2 / r - 1), vmax = Math.sqrt((1 + g.e) / (1 - g.e));
+  $('kbar').style.width = Math.min(100, v / vmax * 100) + '%';
+  $('kstats').innerHTML = [
+    ['Eccentricity', f(g.e, 4), g.e < 0.001 ? 'circle' : 'ellipse'],
+    ['Perihelion (closest)', f(1 - g.e, 3) + ' a', 'q = a(1 − e)'],
+    ['Aphelion (farthest)', f(1 + g.e, 3) + ' a', 'Q = a(1 + e)'],
+    ['Speed ratio', f((1 + g.e) / (1 - g.e), 2) + '×', 'v_peri / v_aph = (1+e)/(1−e)'],
+    ['Distance now', f(r, 3) + ' a', 'r = a(1 − e cos E)'],
+    ['Speed now', f(v, 3) + ' v₀', 'v² ∝ 2/r − 1/a'],
+  ].map(([k, n, fm]) => `<div class="stat"><div class="k">${k}</div><div class="n">${n}</div><div class="f">${fm}</div></div>`).join('');
+}
+function kStep(now){
+  if (!kPlaying) return;
+  const dt = Math.min(0.05, (now - kLast) / 1000); kLast = now;
+  kM = (kM + dt * 2 * Math.PI / 8 * +$('ks').value) % (2 * Math.PI);   // one orbit in 8 s at 1×
+  renderKepler(); requestAnimationFrame(kStep);
+}
+$('kplay').onclick = () => {
+  kPlaying = !kPlaying; $('kplay').textContent = kPlaying ? '❚❚ Pause' : '▶ Play';
+  if (kPlaying){ kLast = performance.now(); requestAnimationFrame(kStep); }
+};
+document.querySelectorAll('button[data-k]').forEach(btn => btn.onclick = () => { $('ke').value = btn.dataset.k; renderKepler(); });
+['ke', 'ks', 'kSec'].forEach(id => $(id).addEventListener('input', renderKepler));
+
+renderExplorer(); renderString(); renderReflect(true); renderKepler();
+</script>
+</body>
+</html>

@@ -7,8 +7,11 @@ Learning projects for classic cryptographic algorithms, built so every step can 
 | Project | What it shows | Guide | Live demo |
 |---|---|---|---|
 | [RSA](rsa/) | Key generation, encryption, decryption, digital signatures, and how an attacker would try to break it | [README](rsa/README.md) | [Open](https://yanshuman.github.io/cryptography/rsa/) |
+| [Elliptic Curves](elliptic-curves/) | Step-by-step path to elliptic-curve cryptography. Part 1: the ellipse, with its geometry, orbits, reflection and an interactive lab | [README](elliptic-curves/README.md) | [Ellipse Lab](https://yanshuman.github.io/cryptography/elliptic-curves/ellipse/) |
 
-[![RSA architecture](rsa/images/rsa-architecture-light.png)](rsa/README.md)
+| RSA | Ellipse |
+|---|---|
+| [![RSA architecture](rsa/images/rsa-architecture-light.png)](rsa/README.md) | [![Anatomy of an ellipse](elliptic-curves/ellipse/images/ellipse-anatomy-light.png)](elliptic-curves/ellipse/README.md) |
 
 ## How to run
 
@@ -18,9 +21,13 @@ Every project is plain HTML, CSS and JavaScript, with no installation or build s
 
 ```
 cryptography/
-├── README.md        # This index
-└── rsa/             # RSA: interactive lab, architecture diagram, guide
-    └── README.md
+├── README.md            # This index
+├── rsa/                 # RSA: interactive lab, architecture diagram, guide
+│   └── README.md
+└── elliptic-curves/     # Elliptic curves section
+    ├── README.md
+    └── ellipse/         # Ellipse guide + Ellipse Lab
+        └── README.md
 ```
 
 ## Questions

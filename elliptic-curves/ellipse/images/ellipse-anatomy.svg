@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" width="1000" height="620">
+<rect width="1000" height="620" rx="18" fill="#F7F9FC"/>
+<text x="30" y="42" fill="#16203A" font-size="22" font-weight="800" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">Anatomy of an ellipse</text>
+<text x="30" y="66" fill="#56617C" font-size="15" font-weight="500" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">a = 5, b = 3, c = 4, e = c/a = 0.8</text>
+<line x1="28.80000000000001" y1="330" x2="971.2" y2="330" stroke="#C9D2E3" stroke-width="1.5"/>
+<line x1="500" y1="578" x2="500" y2="82" stroke="#C9D2E3" stroke-width="1.5"/>
+<line x1="112.5" y1="528.4" x2="112.5" y2="131.6" stroke="#B23A26" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="112.5" y="121.6" fill="#B23A26" font-size="13" font-weight="600" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">directrix x = −a/e</text>
+<line x1="887.5" y1="528.4" x2="887.5" y2="131.6" stroke="#B23A26" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="887.5" y="121.6" fill="#B23A26" font-size="13" font-weight="600" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">directrix x = a/e</text>
+<path d="M500,330 L748.0,330 L500,144.0 Z" fill="#DCF2E6" fill-opacity=".7" stroke="#1C7A50" stroke-width="2"/>
+<ellipse cx="500" cy="330" rx="310.0" ry="186.0" fill="none" stroke="#16203A" stroke-width="3"/>
+<line x1="500" y1="330.0" x2="190.0" y2="330" stroke="#6A3FC9" stroke-width="3"/>
+<text x="325.0" y="358" fill="#6A3FC9" font-size="15" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">a  (semi-major)</text>
+<text x="624.0" y="354" fill="#1C7A50" font-size="18" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">c</text>
+<text x="486" y="286.4" fill="#1C7A50" font-size="18" font-weight="700" text-anchor="end" font-family="Segoe UI,Helvetica,Arial,sans-serif">b</text>
+<text x="640.0" y="231.0" fill="#1C7A50" font-size="18" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">a</text>
+<text x="634.0" y="289.0" fill="#1C7A50" font-size="14" font-weight="600" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">a² = b² + c²</text>
+<line x1="252.0" y1="330" x2="645.5361844636261" y2="165.7717477282396" stroke="#2747C9" stroke-width="2.6"/>
+<line x1="748.0" y1="330" x2="645.5361844636261" y2="165.7717477282396" stroke="#9A6200" stroke-width="2.6"/>
+<text x="434.76809223181306" y="239.8858738641198" fill="#2747C9" font-size="18" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">r₁</text>
+<text x="712.7680922318131" y="245.8858738641198" fill="#9A6200" font-size="18" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">r₂</text>
+<circle cx="252.0" cy="330" r="7" fill="#B23A26"/>
+<circle cx="748.0" cy="330" r="7" fill="#B23A26"/>
+<circle cx="500" cy="330" r="5" fill="#56617C"/>
+<circle cx="645.5361844636261" cy="165.7717477282396" r="8" fill="#16203A"/>
+<circle cx="190.0" cy="330" r="5" fill="#56617C"/>
+<circle cx="810.0" cy="330" r="5" fill="#56617C"/>
+<circle cx="500" cy="144.0" r="5" fill="#56617C"/>
+<circle cx="500" cy="516.0" r="5" fill="#56617C"/>
+<text x="252.0" y="358" fill="#B23A26" font-size="18" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">F₁</text>
+<text x="748.0" y="358" fill="#B23A26" font-size="18" font-weight="700" text-anchor="middle" font-family="Segoe UI,Helvetica,Arial,sans-serif">F₂</text>
+<text x="510" y="354" fill="#56617C" font-size="16" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">C</text>
+<text x="659.5361844636261" y="155.7717477282396" fill="#16203A" font-size="19" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">P</text>
+<text x="180.0" y="320" fill="#56617C" font-size="16" font-weight="700" text-anchor="end" font-family="Segoe UI,Helvetica,Arial,sans-serif">V₁</text>
+<text x="820.0" y="320" fill="#56617C" font-size="16" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">V₂</text>
+<text x="510" y="134.0" fill="#56617C" font-size="16" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">B₁</text>
+<text x="510" y="538.0" fill="#56617C" font-size="16" font-weight="700" text-anchor="start" font-family="Segoe UI,Helvetica,Arial,sans-serif">B₂</text>
+<text x="970" y="598" fill="#16203A" font-size="17" font-weight="700" text-anchor="end" font-family="Segoe UI,Helvetica,Arial,sans-serif">r₁ + r₂ = 2a  for every point P</text>
+<text x="30" y="598" fill="#16203A" font-size="17" font-weight="600" text-anchor="start" font-family="Consolas,monospace">x²/a² + y²/b² = 1</text>
+</svg>
