@@ -2,11 +2,12 @@
 
 ![Adding two points on the elliptic curve y² = x³ − x + 1: the line through P and Q meets the curve at a third point, which is flipped over the x-axis to give P + Q](images/point-addition.png)
 
-**[▶ Live demo: Elliptic Curve Lab](https://yanshuman.github.io/cryptography/elliptic-curves/elliptic-curve/)** · **[📘 Beginner walkthrough, step by step](step-by-step.md)** · [Previous: the Ellipse](../ellipse/README.md) · [Elliptic curves section](../README.md)
+**[▶ Live demo: Elliptic Curve Lab](https://yanshuman.github.io/cryptography/elliptic-curves/elliptic-curve/)** · **[📘 Beginner walkthrough, step by step](step-by-step.md)** · **[🌐 Real-life example: opening a website](real-life-example.md)** · [Previous: the Ellipse](../ellipse/README.md) · [Elliptic curves section](../README.md)
 
 Elliptic-curve cryptography (ECC) secures HTTPS, Bitcoin, Signal, WhatsApp and SSH. This guide explains what an elliptic curve is, how its points are added together, how that becomes a one-way function, and why it's used almost everywhere today. The **Elliptic Curve Lab** lets you try every step with your own numbers.
 
 > **New to this?** Start with [**Elliptic Curve Cryptography, Step by Step**](step-by-step.md). It works through one tiny curve, y² = x³ + 2x + 2 (mod 17), entirely by hand: adding points, making keys, and a full key exchange.
+> Then read [**ECC in Real Life**](real-life-example.md) to see the same numbers used when your browser opens an HTTPS website, and how WhatsApp and Bitcoin differ.
 
 ## Contents
 
@@ -412,6 +413,7 @@ elliptic-curve/
 ├── README.md               # This guide
 ├── index.html              # Elliptic Curve Lab
 ├── step-by-step.md         # Beginner walkthrough on a tiny curve mod 17
+├── real-life-example.md    # The same numbers in an HTTPS handshake (+ WhatsApp, Bitcoin)
 └── images/
     ├── point-addition.png  # Chord-and-tangent addition (from the lab)
     └── finite-field.png    # Curve mod 97 with multiples of G (from the lab)

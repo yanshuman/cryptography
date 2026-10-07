@@ -214,3 +214,5 @@ Open the [Elliptic Curve Lab](https://yanshuman.github.io/cryptography/elliptic-
 3. Slide **k** from 1 to 19 and compare each result with the table in Step 8.
 4. In **section 3 (key exchange)**, set Alice's secret to **3** and Bob's to **9**. Both sides arrive at **(13, 7)**, as in Step 11.
 5. In **section 4**, press **Try to find Alice's secret** to see why a toy curve can be broken instantly.
+
+**Read next:** [ECC in Real Life: what happens when you open a website](real-life-example.md)
