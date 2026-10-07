@@ -5,7 +5,7 @@ Elliptic-curve cryptography (ECC) protects Bitcoin wallets, HTTPS connections, S
 | # | Topic | What it covers | Guide | Live demo |
 |---|---|---|---|---|
 | 1 | [Ellipse](ellipse/) | Definition, equations, area, perimeter, reflection, Kepler orbits, real-world uses, and how the ellipse led to elliptic curves | [README](ellipse/README.md) | [Open](https://yanshuman.github.io/cryptography/elliptic-curves/ellipse/) |
-| 2 | [Elliptic Curve](elliptic-curve/) | What an elliptic curve is, adding points, finite fields, ECDH key exchange, ECDSA, why ECC is used, and an attacker demo | [README](elliptic-curve/README.md) | [Open](https://yanshuman.github.io/cryptography/elliptic-curves/elliptic-curve/) |
+| 2 | [Elliptic Curve](elliptic-curve/) | What an elliptic curve is, adding points, finite fields, ECDH key exchange, ECDSA, why ECC is used, and an attacker demo | [README](elliptic-curve/README.md) · [Step by step](elliptic-curve/step-by-step.md) | [Open](https://yanshuman.github.io/cryptography/elliptic-curves/elliptic-curve/) |
 
 | Ellipse | Elliptic curve |
 |---|---|
@@ -31,6 +31,7 @@ elliptic-curves/
 │   └── images/
 └── elliptic-curve/  # Elliptic curve guide + Elliptic Curve Lab
     ├── README.md
+    ├── step-by-step.md
     ├── index.html
     └── images/
 ```
