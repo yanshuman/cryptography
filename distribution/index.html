@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Distribution Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --ink:#16203A; --muted:#56617C; --line:#D3DAE7; --grid:#E3E8F0;
+  --pub:#2747C9; --pub-soft:#E3E9FB; --priv:#9A6200; --priv-soft:#FBEFD6;
+  --ok:#1C7A50; --ok-soft:#DCF2E6; --bad:#B23A26; --bad-soft:#F9E1DC; --vio:#6A3FC9; --vio-soft:#EEE8FB;
+  --sans:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+    --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+    --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1524; --surface:#18203A; --ink:#E8ECF5; --muted:#9AA5BE; --line:#2B365A; --grid:#1E2843;
+  --pub:#93AAFF; --pub-soft:#22305E; --priv:#F2C062; --priv-soft:#3A2F17;
+  --ok:#6FD3A3; --ok-soft:#173A2B; --bad:#FF8F7A; --bad-soft:#3E1F1A; --vio:#C3A6FF; --vio-soft:#2A2148;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+.wrap{max-width:920px;margin:0 auto;padding:40px 16px 80px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-0.02em}
+header p{margin:0;color:var(--muted);max-width:66ch}
+.group{margin-top:18px}
+.group .gl{font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+button{font-family:var(--sans);font-size:.9rem;font-weight:700;padding:7px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--pub);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:22px}
+.title{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.title h2{margin:0;font-size:1.5rem;font-weight:800}
+.tag{font-size:.78rem;font-weight:800;padding:2px 10px;border-radius:999px}
+.tag.d{background:var(--priv-soft);color:var(--priv)} .tag.c{background:var(--pub-soft);color:var(--pub)}
+.title a{margin-left:auto;font-weight:700;color:var(--pub);font-size:.92rem}
+.formula{font-family:var(--mono);font-size:1rem;margin:8px 0 2px;overflow-x:auto;white-space:nowrap}
+.example{margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:.95rem}
+.example b{color:var(--ink)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 20px;margin-top:14px}
+.ctl label{display:flex;justify-content:space-between;font-size:.88rem;font-weight:700;margin-bottom:2px}
+.ctl label output{font-family:var(--mono);font-weight:600;color:var(--pub)}
+.ctl.rng label output{color:var(--ok)}
+input[type=range]{width:100%;accent-color:var(--pub)}
+.ctl.rng input{accent-color:var(--ok)}
+.stage{width:100%;height:auto;display:block;background:var(--bg);border-radius:12px;margin-top:12px}
+.stage .grid{stroke:var(--grid);stroke-width:1}
+.stage .axis{stroke:var(--line);stroke-width:1.5}
+.stage .tick{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+.stage .curve{fill:none;stroke:var(--pub);stroke-width:2.8}
+.stage .ref{fill:none;stroke:var(--muted);stroke-width:1.8;stroke-dasharray:6 5}
+.stage .area{fill:var(--ok);fill-opacity:.28}
+.stage .bar{fill:var(--pub-soft);stroke:var(--pub);stroke-width:1.2}
+.stage .bar.in{fill:var(--ok);fill-opacity:.55;stroke:var(--ok)}
+.stage .meanl{stroke:var(--priv);stroke-width:2;stroke-dasharray:4 4}
+.stage text.lbl{font-family:var(--sans);font-size:13px;font-weight:800}
+.stage text.mean{fill:var(--priv)} .stage text.prob{fill:var(--ok)} .stage text.refl{fill:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.stat.hl{border-color:var(--ok);background:var(--ok-soft)}
+.stat .k{font-size:.8rem;font-weight:700;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-size:1.1rem;font-weight:600}
+.stat.hl .n{color:var(--ok)}
+.stat .f{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.why{color:var(--muted);font-size:.95rem;margin:12px 0 0;max-width:72ch}
+footer{margin-top:50px;color:var(--muted);font-size:.92rem}
+footer a{color:var(--pub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Distribution Explorer</h1>
+    <p>A probability distribution tells you how likely each outcome is. Pick a distribution, move its parameters, and drag the green range to see the probability of landing inside it. Each one starts with the example from its guide.</p>
+    <div class="group"><div class="gl">Discrete: counts (0, 1, 2, …)</div><div class="pills" id="pillsD"></div></div>
+    <div class="group"><div class="gl">Continuous: measurements (any value)</div><div class="pills" id="pillsC"></div></div>
+  </header>
+
+  <div class="panel">
+    <div class="title"><h2 id="dname"></h2><span class="tag" id="dtag"></span><a id="dguide" href="#">Read the step-by-step guide →</a></div>
+    <div class="formula" id="dformula"></div>
+    <div class="example" id="dexample"></div>
+    <div class="controls" id="params"></div>
+    <div class="controls">
+      <div class="ctl rng"><label for="ra">Range from a <output id="rao"></output></label><input type="range" id="ra"></div>
+      <div class="ctl rng"><label for="rb">to b <output id="rbo"></output></label><input type="range" id="rb"></div>
+    </div>
+    <svg class="stage" id="plot" viewBox="0 0 820 420" role="img" aria-label="Distribution plot"></svg>
+    <div class="stats" id="stats"></div>
+    <p class="why" id="dnote"></p>
+  </div>
+
+  <footer><p>See the <a href="README.md">distributions guide</a> for what each one is, how they connect, and how to choose the right one.</p></footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+// ---------- math helpers ----------
+function lgamma(z){                          // Lanczos approximation
+  const g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lgamma(1 - z);
+  z -= 1; let x = c[0]; for (let i = 1; i < g + 2; i++) x += c[i] / (z + i);
+  const t = z + g + 0.5; return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+const lchoose = (n, k) => lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1);
+const npdf = (x, m, s) => Math.exp(-((x - m) ** 2) / (2 * s * s)) / (s * Math.sqrt(2 * Math.PI));
+const fmt = (v, d = 4) => { if (!isFinite(v)) return '∞'; const a = Math.abs(v); if (a !== 0 && (a < 1e-4 || a >= 1e6)) return v.toExponential(2); return (+v.toFixed(d)).toString(); };
+const pct = v => (v * 100 >= 99.995 && v < 1 ? '>99.99' : +(v * 100).toFixed(2)) + '%';
+
+// ---------- distributions ----------
+const D = {
+  bernoulli: {name: 'Bernoulli', type: 'd', guide: 'bernoulli.md',
+    params: [{k: 'p', label: 'Success probability p', min: 0.01, max: 0.99, step: 0.01, v: 0.7}],
+    formula: 'P(X = x) = pˣ (1 − p)¹⁻ˣ,   x ∈ {0, 1}',
+    example: '<b>One free throw.</b> A player makes 70% of free throws. X = 1 if this shot goes in, 0 if it misses.',
+    range: () => [1, 1], support: () => [0, 1], pmf: (x, P) => x === 1 ? P.p : 1 - P.p,
+    mean: P => P.p, vari: P => P.p * (1 - P.p), meanF: 'p', varF: 'p(1 − p)'},
+  binomial: {name: 'Binomial', type: 'd', guide: 'binomial.md',
+    params: [{k: 'n', label: 'Number of trials n', min: 1, max: 60, step: 1, v: 10}, {k: 'p', label: 'Success probability p', min: 0.01, max: 0.99, step: 0.01, v: 0.7}],
+    formula: 'P(X = k) = C(n, k) · pᵏ · (1 − p)ⁿ⁻ᵏ',
+    example: '<b>10 free throws.</b> Same 70% shooter takes 10 shots. X = how many go in. The range shows P(8 or more).',
+    range: P => [Math.min(8, P.n), P.n], support: P => [0, P.n],
+    pmf: (k, P) => Math.exp(lchoose(P.n, k) + k * Math.log(P.p) + (P.n - k) * Math.log(1 - P.p)),
+    mean: P => P.n * P.p, vari: P => P.n * P.p * (1 - P.p), meanF: 'n·p', varF: 'n·p(1 − p)'},
+  poisson: {name: 'Poisson', type: 'd', guide: 'poisson.md',
+    params: [{k: 'l', label: 'Average rate λ', min: 0.2, max: 20, step: 0.1, v: 3}],
+    formula: 'P(X = k) = e^(−λ) · λᵏ / k!',
+    example: '<b>Calls per hour.</b> A help desk gets 3 calls per hour on average. X = calls in the next hour. The range shows P(5 or more).',
+    range: P => [5, D.poisson.support(P)[1]], support: P => [0, Math.max(10, Math.ceil(P.l + 5 * Math.sqrt(P.l) + 3))],
+    pmf: (k, P) => Math.exp(-P.l + k * Math.log(P.l) - lgamma(k + 1)),
+    mean: P => P.l, vari: P => P.l, meanF: 'λ', varF: 'λ'},
+  geometric: {name: 'Geometric', type: 'd', guide: 'geometric.md',
+    params: [{k: 'p', label: 'Success probability p', min: 0.02, max: 0.9, step: 'any', v: 1 / 6}],
+    formula: 'P(X = k) = (1 − p)ᵏ⁻¹ · p,   k = 1, 2, 3, …',
+    example: '<b>Rolling until a 6.</b> Roll a fair die until the first 6 appears (p = 1/6). X = number of rolls needed. The range shows P(within 6 rolls).',
+    range: () => [1, 6], support: P => [1, Math.max(8, Math.min(80, Math.ceil(Math.log(0.004) / Math.log(1 - P.p))))],
+    pmf: (k, P) => Math.pow(1 - P.p, k - 1) * P.p,
+    mean: P => 1 / P.p, vari: P => (1 - P.p) / (P.p * P.p), meanF: '1 / p', varF: '(1 − p) / p²'},
+  uniform: {name: 'Uniform', type: 'c', guide: 'uniform.md',
+    params: [{k: 'a', label: 'Lower end a', min: -10, max: 9, step: 0.5, v: 0}, {k: 'b', label: 'Upper end b', min: -9, max: 20, step: 0.5, v: 10}],
+    formula: 'f(x) = 1 / (b − a)   for a ≤ x ≤ b',
+    example: '<b>Waiting for a bus.</b> A bus comes every 10 minutes and you arrive at a random moment. X = minutes you wait. The range shows P(wait ≤ 3 min).',
+    range: P => [P.a, P.a + 0.3 * (P.b - P.a)], support: P => [P.a - 0.15 * (P.b - P.a), P.b + 0.15 * (P.b - P.a)],
+    pdf: (x, P) => x >= P.a && x <= P.b ? 1 / (P.b - P.a) : 0,
+    mean: P => (P.a + P.b) / 2, vari: P => (P.b - P.a) ** 2 / 12, meanF: '(a + b) / 2', varF: '(b − a)² / 12'},
+  normal: {name: 'Normal (Gaussian)', type: 'c', guide: 'normal.md',
+    params: [{k: 'm', label: 'Mean μ', min: 30, max: 100, step: 1, v: 70}, {k: 's', label: 'Standard deviation σ', min: 1, max: 20, step: 0.5, v: 5}],
+    formula: 'f(x) = 1 / (σ√(2π)) · e^(−(x − μ)² / (2σ²))',
+    example: '<b>Exam marks.</b> Marks in a class have mean μ = 70 and σ = 5. The range μ ± σ (65 to 75) holds about 68% of students.',
+    range: P => [P.m - P.s, P.m + P.s], support: P => [P.m - 4 * P.s, P.m + 4 * P.s],
+    pdf: (x, P) => npdf(x, P.m, P.s),
+    mean: P => P.m, vari: P => P.s * P.s, meanF: 'μ', varF: 'σ²'},
+  exponential: {name: 'Exponential', type: 'c', guide: 'exponential.md',
+    params: [{k: 'l', label: 'Rate λ (per hour)', min: 0.2, max: 10, step: 0.1, v: 3}],
+    formula: 'f(t) = λ · e^(−λt),   t ≥ 0',
+    example: '<b>Time until the next call.</b> Calls arrive at 3 per hour. T = hours until the next call (mean 1/3 h = 20 min). The range shows P(wait over 30 min).',
+    range: P => [0.5, D.exponential.support(P)[1]], support: P => [0, Math.max(1.5, 6 / P.l)],
+    pdf: (x, P) => x < 0 ? 0 : P.l * Math.exp(-P.l * x),
+    mean: P => 1 / P.l, vari: P => 1 / (P.l * P.l), meanF: '1 / λ', varF: '1 / λ²'},
+  lognormal: {name: 'Log-normal', type: 'c', guide: 'lognormal.md',
+    params: [{k: 'm', label: 'μ of ln X', min: 2, max: 5, step: 0.05, v: 3.4}, {k: 's', label: 'σ of ln X', min: 0.1, max: 1.2, step: 0.05, v: 0.5}],
+    formula: 'f(x) = 1 / (xσ√(2π)) · e^(−(ln x − μ)² / (2σ²)),   x > 0',
+    example: '<b>Monthly income (₹ thousand).</b> ln(income) is normal with μ = 3.4, σ = 0.5, so the median is about ₹30k. The range shows P(income over ₹60k).',
+    range: P => [60, D.lognormal.support(P)[1]], support: P => [0, Math.exp(P.m + 3.2 * P.s)],
+    pdf: (x, P) => x <= 0 ? 0 : Math.exp(-((Math.log(x) - P.m) ** 2) / (2 * P.s * P.s)) / (x * P.s * Math.sqrt(2 * Math.PI)),
+    mean: P => Math.exp(P.m + P.s * P.s / 2), vari: P => (Math.exp(P.s * P.s) - 1) * Math.exp(2 * P.m + P.s * P.s), meanF: 'e^(μ + σ²/2)', varF: '(e^σ² − 1)·e^(2μ + σ²)'},
+  chisq: {name: 'Chi-square', type: 'c', guide: 'chi-square.md',
+    params: [{k: 'k', label: 'Degrees of freedom k', min: 1, max: 30, step: 1, v: 5}],
+    formula: 'f(x) = x^(k/2 − 1) · e^(−x/2) / (2^(k/2) · Γ(k/2)),   x > 0',
+    example: '<b>Is this die fair?</b> Roll it 60 times and compute χ² = Σ(observed − expected)² / expected, with k = 5. Values beyond 11.07 (the shaded 5% tail) suggest a loaded die.',
+    range: P => [P.k === 5 ? 11.07 : +(P.k + 2 * Math.sqrt(2 * P.k)).toFixed(2), D.chisq.support(P)[1]], support: P => [0, Math.max(12, P.k + 5 * Math.sqrt(2 * P.k))],
+    pdf: (x, P) => x <= 0 ? 0 : Math.exp((P.k / 2 - 1) * Math.log(x) - x / 2 - (P.k / 2) * Math.log(2) - lgamma(P.k / 2)),
+    mean: P => P.k, vari: P => 2 * P.k, meanF: 'k', varF: '2k'},
+  t: {name: "Student's t", type: 'c', guide: 't-distribution.md',
+    params: [{k: 'v', label: 'Degrees of freedom ν', min: 1, max: 60, step: 1, v: 5}],
+    formula: 'f(t) = Γ((ν+1)/2) / (√(νπ) Γ(ν/2)) · (1 + t²/ν)^(−(ν+1)/2)',
+    example: '<b>Testing 6 batteries.</b> With a small sample (n = 6, ν = 5), 95% of t-values fall between −2.571 and +2.571, wider than the normal ±1.96. The dashed curve is the standard normal.',
+    range: P => P.v === 5 ? [-2.571, 2.571] : [-1.96, 1.96], support: () => [-5, 5], ref: x => npdf(x, 0, 1),
+    pdf: (x, P) => Math.exp(lgamma((P.v + 1) / 2) - lgamma(P.v / 2) - 0.5 * Math.log(P.v * Math.PI) - (P.v + 1) / 2 * Math.log(1 + x * x / P.v)),
+    mean: P => P.v > 1 ? 0 : NaN, vari: P => P.v > 2 ? P.v / (P.v - 2) : (P.v > 1 ? Infinity : NaN), meanF: '0 (ν > 1)', varF: 'ν / (ν − 2) (ν > 2)'},
+};
+const ORDER_D = ['bernoulli', 'binomial', 'poisson', 'geometric'], ORDER_C = ['uniform', 'normal', 'exponential', 'lognormal', 'chisq', 't'];
+
+let cur = 'normal', P = {};
+function pills(){
+  const mk = id => `<button data-d="${id}" aria-pressed="${id === cur}">${D[id].name}</button>`;
+  $('pillsD').innerHTML = ORDER_D.map(mk).join(''); $('pillsC').innerHTML = ORDER_C.map(mk).join('');
+}
+function select(id){
+  cur = D[id] ? id : 'normal'; const d = D[cur];
+  P = {}; d.params.forEach(p => P[p.k] = p.v);
+  pills();
+  $('dname').textContent = d.name; $('dtag').textContent = d.type === 'd' ? 'discrete' : 'continuous'; $('dtag').className = 'tag ' + d.type;
+  $('dguide').href = d.guide; $('dformula').textContent = d.formula; $('dexample').innerHTML = d.example;
+  $('params').innerHTML = d.params.map(p => `<div class="ctl"><label for="p_${p.k}">${p.label} <output id="o_${p.k}"></output></label><input type="range" id="p_${p.k}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.v}"></div>`).join('');
+  d.params.forEach(p => $('p_' + p.k).addEventListener('input', () => { P[p.k] = +$('p_' + p.k).value; fixParams(); setupRange(true); draw(); }));
+  setupRange(true); draw();
+  if (location.hash !== '#' + cur) history.replaceState(null, '', '#' + cur);
+}
+function fixParams(){
+  if (cur === 'uniform' && P.b <= P.a){ P.b = P.a + 0.5; $('p_b').value = P.b; }
+}
+function setupRange(reset){
+  const d = D[cur], [lo, hi] = d.support(P), step = d.type === 'd' ? 1 : 'any';
+  for (const id of ['ra', 'rb']){ const el = $(id); el.min = lo; el.max = hi; el.step = step; }
+  if (reset){ const [a, b] = d.range(P); $('ra').value = a; $('rb').value = b; }
+}
+function prob(a, b){
+  const d = D[cur];
+  if (b < a) return 0;
+  if (d.type === 'd'){
+    let s = 0; for (let k = Math.ceil(a); k <= Math.floor(b); k++) s += d.pmf(k, P);
+    if (openEnded(b)){ const [lo, hi] = d.support(P); let all = 0; for (let k = lo; k <= hi; k++) all += d.pmf(k, P); s += Math.max(0, 1 - all); }   // tail beyond the chart
+    return Math.min(1, s);
+  }
+  const A = Math.max(a, cur === 't' || cur === 'normal' || cur === 'uniform' ? -1e9 : 0), n = 6000, h = (b - A) / n;
+  let s = 0; for (let i = 0; i < n; i++) s += d.pdf(A + (i + 0.5) * h, P);
+  // add the tail beyond the plotted support so "≥ a" ranges are exact
+  return Math.min(1, s * h + (openEnded(b) ? tail(b) : 0));
+}
+function openEnded(b){ return b >= +$('rb').max - 1e-9 && !['bernoulli', 'binomial', 'uniform'].includes(cur); }
+function tail(b){   // probability beyond the plotted right edge
+  const d = D[cur], n = 4000, far = b + 40 * Math.sqrt(Math.max(d.vari(P), 1e-6) || 1) + 50, h = (far - b) / n;
+  let s = 0; for (let i = 0; i < n; i++) s += d.pdf(b + (i + 0.5) * h, P); return s * h;
+}
+function nice(lo, hi){
+  const span = hi - lo, raw = span / 8, m = Math.pow(10, Math.floor(Math.log10(raw))), st = [1, 2, 2.5, 5, 10].map(x => x * m).find(x => span / x <= 10);
+  const out = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) out.push(+v.toPrecision(10)); return out;
+}
+function draw(){
+  const d = D[cur]; let a = +$('ra').value, b = +$('rb').value;
+  if (a > b){ [a, b] = [b, a]; }
+  d.params.forEach(p => $('o_' + p.k).textContent = fmt(P[p.k], 3));
+  $('rao').textContent = fmt(a, 3); $('rbo').textContent = openEnded(b) ? fmt(b, 3) + '+' : fmt(b, 3);
+  const [lo, hi] = d.support(P), L = 60, R = 800, T = 20, B = 380;
+  const pad = d.type === 'd' ? 0.6 : 0, X = x => L + (x - lo + pad) / (hi - lo + 2 * pad) * (R - L);
+  let s = '', ymax = 0;
+  if (d.type === 'd'){
+    for (let k = lo; k <= hi; k++) ymax = Math.max(ymax, d.pmf(k, P));
+  } else {
+    for (let i = 1; i <= 400; i++){ const x = lo + (hi - lo) * i / 400; const y = d.pdf(x, P); if (isFinite(y)) ymax = Math.max(ymax, y); }
+    if (cur === 'chisq' && P.k <= 2) ymax = Math.min(ymax, 0.6);
+    if (d.ref) ymax = Math.max(ymax, d.ref(0));
+  }
+  ymax *= 1.12; const Y = y => B - Math.min(y, ymax) / ymax * (B - T);
+  for (const yt of nice(0, ymax)) s += `<line class="grid" x1="${L}" y1="${Y(yt)}" x2="${R}" y2="${Y(yt)}"/><text class="tick" x="${L - 8}" y="${Y(yt) + 4}" text-anchor="end">${fmt(yt, 3)}</text>`;
+  s += `<line class="axis" x1="${L}" y1="${B}" x2="${R}" y2="${B}"/><line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${B}"/>`;
+  if (d.type === 'd'){
+    const n = hi - lo + 1, w = Math.min(46, (R - L) / n * 0.72);
+    for (let k = lo; k <= hi; k++){
+      const y = d.pmf(k, P), inR = k >= a && k <= b, x = X(k);
+      s += `<rect class="bar${inR ? ' in' : ''}" x="${x - w / 2}" y="${Y(y)}" width="${w}" height="${B - Y(y)}" rx="3"/>`;
+      if (n <= 31 || k % Math.ceil(n / 25) === 0) s += `<text class="tick" x="${x}" y="${B + 18}" text-anchor="middle">${k}</text>`;
+      if (n <= 13 && y > 0.0005) s += `<text class="tick" x="${x}" y="${Y(y) - 6}" text-anchor="middle">${fmt(y, 3)}</text>`;
+    }
+  } else {
+    for (const xt of nice(lo, hi)) s += `<text class="tick" x="${X(xt)}" y="${B + 18}" text-anchor="middle">${fmt(xt, 3)}</text>`;
+    const pts = []; for (let i = 0; i <= 500; i++){ const x = lo + (hi - lo) * i / 500; pts.push([x, d.pdf(x, P)]); }
+    const A = Math.max(a, lo), Bb = Math.min(b, hi);
+    if (Bb > A){
+      let ar = `M${X(A)},${B}`; for (let i = 0; i <= 300; i++){ const x = A + (Bb - A) * i / 300; ar += ` L${X(x)},${Y(d.pdf(x, P))}`; }
+      s += `<path class="area" d="${ar} L${X(Bb)},${B} Z"/>`;
+    }
+    if (d.ref){ let rp = ''; for (let i = 0; i <= 300; i++){ const x = lo + (hi - lo) * i / 300; rp += (i ? 'L' : 'M') + X(x) + ',' + Y(d.ref(x)); } s += `<path class="ref" d="${rp}"/><text class="lbl refl" x="${X(2.2)}" y="${Y(d.ref(2.2)) - 26}">standard normal</text>`; }
+    s += `<path class="curve" d="${pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]) + ',' + Y(isFinite(p[1]) ? p[1] : ymax)).join('')}"/>`;
+  }
+  const mu = d.mean(P);
+  if (isFinite(mu) && mu >= lo && mu <= hi) s += `<line class="meanl" x1="${X(mu)}" y1="${T}" x2="${X(mu)}" y2="${B}"/><text class="lbl mean" x="${X(mu) + 6}" y="${T + 14}">mean ${fmt(mu, 3)}</text>`;
+  const pr = prob(a, b);
+  s += `<text class="lbl prob" x="${R}" y="${T + 14}" text-anchor="end">${openEnded(b) ? `P(X ≥ ${fmt(a, 3)})` : `P(${fmt(a, 3)} ≤ X ≤ ${fmt(b, 3)})`} = ${pct(pr)}</text>`;
+  $('plot').innerHTML = s;
+  const v = d.vari(P);
+  $('stats').innerHTML = [
+    ['P(a ≤ X ≤ b)', pct(pr), d.type === 'd' ? 'sum of the green bars' : 'green area under the curve', true],
+    ['Mean', fmt(mu), d.meanF], ['Variance', fmt(v), d.varF], ['Standard deviation', fmt(Math.sqrt(v)), '√variance'],
+  ].map(([k, n, f, hl]) => `<div class="stat${hl ? ' hl' : ''}"><div class="k">${k}</div><div class="n">${n}</div><div class="f">${f}</div></div>`).join('');
+  $('dnote').textContent = d.type === 'd'
+    ? 'Discrete: each bar is a probability, and all the bars add up to 1.'
+    : 'Continuous: the height is a density, not a probability. Probability is the area under the curve, and the total area is 1.';
+}
+document.addEventListener('click', ev => { const b = ev.target.closest('button[data-d]'); if (b) select(b.dataset.d); });
+['ra', 'rb'].forEach(id => $(id).addEventListener('input', draw));
+window.addEventListener('hashchange', () => select(location.hash.slice(1)));
+select(location.hash.slice(1) || 'normal');
+</script>
+</body>
+</html>
