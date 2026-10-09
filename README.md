@@ -9,6 +9,7 @@ Learning projects for cryptography and the maths behind it, built so every step 
 | [RSA](rsa/) | Key generation, encryption, decryption, digital signatures, and how an attacker would try to break it | [README](rsa/README.md) | [Open](https://yanshuman.github.io/cryptography/rsa/) |
 | [Elliptic Curves](elliptic-curves/) | Step-by-step path to elliptic-curve cryptography: the ellipse, then elliptic curves, point addition, finite fields, ECDH key exchange and attacks | [README](elliptic-curves/README.md) | [Ellipse Lab](https://yanshuman.github.io/cryptography/elliptic-curves/ellipse/) · [Elliptic Curve Lab](https://yanshuman.github.io/cryptography/elliptic-curves/elliptic-curve/) |
 | [Probability Distributions](distribution/) | 10 distributions explained step by step (Bernoulli, Binomial, Poisson, Geometric, Uniform, Normal, Exponential, Log-normal, Chi-square, Student's t), each with a worked real-life example | [README](distribution/README.md) | [Distribution Explorer](https://yanshuman.github.io/cryptography/distribution/) |
+| [Algorithms & Data Structures](Algorithms-and-Data-Structures/) | CLRS-based course from Big-O to NP-completeness: every topic with intuition, traces, tested Java code, complexity derivations and exercises (Foundations and Sorting complete; more in progress) | [README](Algorithms-and-Data-Structures/README.md) · [Checklist](Algorithms-and-Data-Structures/16-Progress-Tracker/syllabus-checklist.md) | — |
 
 | RSA | Elliptic Curves | Distributions |
 |---|---|---|
@@ -29,7 +30,9 @@ cryptography/
 │   ├── README.md
 │   ├── ellipse/         # Ellipse guide + Ellipse Lab
 │   └── elliptic-curve/  # Elliptic curve guide + lab, step-by-step, real-life example
-└── distribution/        # Probability distributions: 10 step-by-step guides + Explorer
+├── distribution/        # Probability distributions: 10 step-by-step guides + Explorer
+│   └── README.md
+└── Algorithms-and-Data-Structures/   # CLRS algorithms course: 17 sections, Java, progress tracker
     └── README.md
 ```
 
